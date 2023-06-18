@@ -478,21 +478,21 @@ void LoopClosure::PublishICPCloud(
   sensor_msgs::PointCloud2 target_msg;
   pcl::transformPointCloud(*history_cloud, target_cloud_in_G, T_his_to_G);
   pcl::toROSMsg(target_cloud_in_G, target_msg);
-  target_msg.header.frame_id = "/map";
+  target_msg.header.frame_id = "map";
 
   VPointCloud source_cloud_in_G;
   pcl::transformPointCloud(*cur_cloud, source_cloud_in_G,
                            T_his_to_G * corrected_T_cur_to_history);
   sensor_msgs::PointCloud2 source_msg;
   pcl::toROSMsg(source_cloud_in_G, source_msg);
-  source_msg.header.frame_id = "/map";
+  source_msg.header.frame_id = "map";
 
   VPointCloud cur_cloud_in_his_frame;
   pcl::transformPointCloud(*cur_cloud, cur_cloud_in_his_frame,
                            T_his_to_G * guess_T_cur_to_history);
   sensor_msgs::PointCloud2 check_msg;
   pcl::toROSMsg(cur_cloud_in_his_frame, check_msg);
-  check_msg.header.frame_id = "/map";
+  check_msg.header.frame_id = "map";
 
   pub_icp_target_cloud_.publish(target_msg);
   pub_icp_source_cloud_.publish(source_msg);
@@ -523,7 +523,7 @@ void LoopClosure::PublishDiscretedPoseGraphMarker(
   visualization_msgs::MarkerArray marker_array;
   // pose before
   visualization_msgs::Marker marker_node_before;
-  marker_node_before.header.frame_id = "/map";
+  marker_node_before.header.frame_id = "map";
   marker_node_before.header.stamp = ros::Time::now();
   marker_node_before.action = visualization_msgs::Marker::ADD;
   marker_node_before.type = visualization_msgs::Marker::SPHERE_LIST;
@@ -540,7 +540,7 @@ void LoopClosure::PublishDiscretedPoseGraphMarker(
 
   // pose after
   visualization_msgs::Marker marker_node_after;
-  marker_node_after.header.frame_id = "/map";
+  marker_node_after.header.frame_id = "map";
   marker_node_after.header.stamp = ros::Time::now();
   marker_node_after.action = visualization_msgs::Marker::ADD;
   marker_node_after.type = visualization_msgs::Marker::SPHERE_LIST;
@@ -556,7 +556,7 @@ void LoopClosure::PublishDiscretedPoseGraphMarker(
   marker_node_after.color.a = 1;
 
   visualization_msgs::Marker marker_edge;
-  marker_edge.header.frame_id = "/map";
+  marker_edge.header.frame_id = "map";
   marker_edge.header.stamp = ros::Time::now();
   marker_edge.action = visualization_msgs::Marker::ADD;
   marker_edge.type = visualization_msgs::Marker::LINE_LIST;
@@ -601,7 +601,7 @@ void LoopClosure::PublishLoopClosureMarkers(const PosCloud::Ptr cloud_key_pos) {
   if (history_loop_info_.empty()) return;
   visualization_msgs::MarkerArray marker_array;
   visualization_msgs::Marker marker_node;
-  marker_node.header.frame_id = "/map";
+  marker_node.header.frame_id = "map";
   marker_node.header.stamp = ros::Time::now();
   marker_node.action = visualization_msgs::Marker::ADD;
   marker_node.type = visualization_msgs::Marker::SPHERE_LIST;
@@ -618,7 +618,7 @@ void LoopClosure::PublishLoopClosureMarkers(const PosCloud::Ptr cloud_key_pos) {
 
   // loop edges
   visualization_msgs::Marker marker_edge;
-  marker_edge.header.frame_id = "/map";
+  marker_edge.header.frame_id = "map";
   marker_edge.header.stamp = ros::Time::now();
   marker_edge.action = visualization_msgs::Marker::ADD;
   marker_edge.type = visualization_msgs::Marker::LINE_LIST;

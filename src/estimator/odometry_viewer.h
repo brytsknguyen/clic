@@ -244,7 +244,7 @@ class OdometryViewer {
       vicon_path_est.orientations.push_back(orientation);
     }
 
-    vicon_path_raw.header.frame_id = "/map";
+    vicon_path_raw.header.frame_id = "map";
     vicon_path_raw.header.stamp = ros::Time::now();
     vicon_path_est.header = vicon_path_raw.header;
 
@@ -259,7 +259,7 @@ class OdometryViewer {
     sensor_msgs::PointCloud2 target_msg;
     pcl::toROSMsg(map_corr_temp_cloud, target_msg);
     target_msg.header.stamp = ros::Time::now();
-    target_msg.header.frame_id = "/map";
+    target_msg.header.frame_id = "map";
 
     pub_map_corr_temp_cloud_.publish(target_msg);
   }
@@ -316,7 +316,7 @@ class OdometryViewer {
     pcl::toROSMsg(source_cloud, source_msg);
 
     target_msg.header.stamp = ros::Time::now();
-    target_msg.header.frame_id = "/map";
+    target_msg.header.frame_id = "map";
     source_msg.header = target_msg.header;
 
     pub_target_cloud_.publish(target_msg);
@@ -348,7 +348,7 @@ class OdometryViewer {
         double t = min_time + i * trajectory->getDt();
         geometry_msgs::PoseStamped geo_ctrl;
         geo_ctrl.header.stamp = t_temp.fromSec(t);
-        geo_ctrl.header.frame_id = "/map";
+        geo_ctrl.header.frame_id = "map";
         tf::pointEigenToMsg(trajectory->getKnotPos(i), geo_ctrl.pose.position);
         tf::quaternionEigenToMsg(trajectory->getKnotSO3(i).unit_quaternion(),
                                  geo_ctrl.pose.orientation);
@@ -357,7 +357,7 @@ class OdometryViewer {
 
       nav_msgs::Path traj_ctrl;
       traj_ctrl.header.stamp = time_now;
-      traj_ctrl.header.frame_id = "/map";
+      traj_ctrl.header.frame_id = "map";
       traj_ctrl.poses = poses_ctrl;
       pub_spline_ctrl_type_[viewer_type].publish(traj_ctrl);
     }
@@ -381,7 +381,7 @@ class OdometryViewer {
       sensor_msgs::PointCloud2 cloud_msg;
       pcl::toROSMsg(ctrl_cloud, cloud_msg);
       cloud_msg.header.stamp = ros::Time::now();
-      cloud_msg.header.frame_id = "/map";
+      cloud_msg.header.frame_id = "map";
       pub_spline_ctrl_cloud_type_[viewer_type].publish(cloud_msg);
     }
   }
@@ -392,7 +392,7 @@ class OdometryViewer {
       sensor_msgs::PointCloud2 cloud_msg;
       pcl::toROSMsg(marg_ctrl_cloud, cloud_msg);
       cloud_msg.header.stamp = ros::Time::now();
-      cloud_msg.header.frame_id = "/map";
+      cloud_msg.header.frame_id = "map";
       pub_spline_marg_ctrl_cloud_.publish(cloud_msg);
     }
   }
@@ -415,7 +415,7 @@ class OdometryViewer {
         SE3d pose = trajectory->GetIMUPose(t);
         geometry_msgs::PoseStamped poseIinG;
         poseIinG.header.stamp = t_temp.fromSec(t);
-        poseIinG.header.frame_id = "/map";
+        poseIinG.header.frame_id = "map";
         tf::pointEigenToMsg(pose.translation(), poseIinG.pose.position);
         tf::quaternionEigenToMsg(pose.unit_quaternion(),
                                  poseIinG.pose.orientation);
@@ -424,7 +424,7 @@ class OdometryViewer {
 
       nav_msgs::Path traj_path;
       traj_path.header.stamp = time_now;
-      traj_path.header.frame_id = "/map";
+      traj_path.header.frame_id = "map";
       traj_path.poses = poses_geo;
       pub_spline_trajectory_.publish(traj_path);
     }
@@ -435,7 +435,7 @@ class OdometryViewer {
         double t = min_time + i * trajectory->getDt();
         geometry_msgs::PoseStamped geo_ctrl;
         geo_ctrl.header.stamp = t_temp.fromSec(t);
-        geo_ctrl.header.frame_id = "/map";
+        geo_ctrl.header.frame_id = "map";
         tf::pointEigenToMsg(trajectory->getKnotPos(i), geo_ctrl.pose.position);
         tf::quaternionEigenToMsg(trajectory->getKnotSO3(i).unit_quaternion(),
                                  geo_ctrl.pose.orientation);
@@ -444,7 +444,7 @@ class OdometryViewer {
 
       nav_msgs::Path traj_ctrl;
       traj_ctrl.header.stamp = time_now;
-      traj_ctrl.header.frame_id = "/map";
+      traj_ctrl.header.frame_id = "map";
       traj_ctrl.poses = poses_ctrl;
       pub_spline_ctrl_.publish(traj_ctrl);
     }
@@ -465,7 +465,7 @@ class OdometryViewer {
       sensor_msgs::PointCloud2 cloud_msg;
       pcl::toROSMsg(ctrl_cloud, cloud_msg);
       cloud_msg.header.stamp = ros::Time::now();
-      cloud_msg.header.frame_id = "/map";
+      cloud_msg.header.frame_id = "map";
       pub_spline_ctrl_cloud_.publish(cloud_msg);
     }
 
@@ -488,7 +488,7 @@ class OdometryViewer {
       sensor_msgs::PointCloud2 active_cloud_msg;
       pcl::toROSMsg(active_ctrl_cloud, active_cloud_msg);
       active_cloud_msg.header.stamp = ros::Time::now();
-      active_cloud_msg.header.frame_id = "/map";
+      active_cloud_msg.header.frame_id = "map";
       pub_spline_active_ctrl_cloud_.publish(active_cloud_msg);
     }
   }
@@ -524,7 +524,7 @@ class OdometryViewer {
 
       geometry_msgs::PoseStamped pose_gt;
       pose_gt.header.stamp = t_temp.fromSec(v.timestamp);
-      pose_gt.header.frame_id = "/map";
+      pose_gt.header.frame_id = "map";
       tf::pointEigenToMsg(v.position, pose_gt.pose.position);
       tf::quaternionEigenToMsg(v.orientation.unit_quaternion(),
                                pose_gt.pose.orientation);
@@ -533,7 +533,7 @@ class OdometryViewer {
 
     nav_msgs::Path traj_path;
     traj_path.header.stamp = time_now;
-    traj_path.header.frame_id = "/map";
+    traj_path.header.frame_id = "map";
     traj_path.poses = poses_geo;
 
     pub_odom_gt_.publish(traj_path);
@@ -543,7 +543,7 @@ class OdometryViewer {
     ros::Time t_temp;
     geometry_msgs::PoseStamped poseIinG;
     poseIinG.header.stamp = t_temp.fromSec(imu_state.timestamp);
-    poseIinG.header.frame_id = "/map";
+    poseIinG.header.frame_id = "map";
     tf::pointEigenToMsg(imu_state.p, poseIinG.pose.position);
     tf::quaternionEigenToMsg(imu_state.q, poseIinG.pose.orientation);
 
@@ -559,7 +559,7 @@ class OdometryViewer {
 
     nav_msgs::Path traj_propogation;
     traj_propogation.header.stamp = ros::Time::now();
-    traj_propogation.header.frame_id = "/map";
+    traj_propogation.header.frame_id = "map";
     traj_propogation.poses = poses_propogation;
 
     pub_imu_propogation_trajectory_.publish(traj_propogation);
@@ -583,7 +583,7 @@ class OdometryViewer {
       sensor_msgs::PointCloud2 target_msg;
       pcl::toROSMsg(target_cloud, target_msg);
       target_msg.header.stamp = ros::Time::now();
-      target_msg.header.frame_id = "/map";
+      target_msg.header.frame_id = "map";
       pub_target_dense_cloud_.publish(target_msg);
     }
 
@@ -610,7 +610,7 @@ class OdometryViewer {
       sensor_msgs::PointCloud2 source_msg;
       pcl::toROSMsg(source_cloud, source_msg);
       source_msg.header.stamp = ros::Time::now();
-      source_msg.header.frame_id = "/map";
+      source_msg.header.frame_id = "map";
       pub_source_dense_cloud_.publish(source_msg);
     }
   }
@@ -621,7 +621,7 @@ class OdometryViewer {
       sensor_msgs::PointCloud2 cloud_msg;
       pcl::toROSMsg(landmarks, cloud_msg);
       cloud_msg.header.stamp = ros::Time::now();
-      cloud_msg.header.frame_id = "/map";
+      cloud_msg.header.frame_id = "map";
 
       pub_img_landmarks_.publish(cloud_msg);
     }
@@ -630,7 +630,7 @@ class OdometryViewer {
       sensor_msgs::PointCloud2 cloud_msg;
       pcl::toROSMsg(marg_cloud, cloud_msg);
       cloud_msg.header.stamp = ros::Time::now();
-      cloud_msg.header.frame_id = "/map";
+      cloud_msg.header.frame_id = "map";
 
       pub_img_marg_cloud_.publish(cloud_msg);
     }
@@ -691,7 +691,7 @@ class OdometryViewer {
     sensor_msgs::PointCloud2 cloud_msg;
     pcl::toROSMsg(keyframe_cloud, cloud_msg);
     cloud_msg.header.stamp = ros::Time::now();
-    cloud_msg.header.frame_id = "/map";
+    cloud_msg.header.frame_id = "map";
 
     pub_vio_keyframe_.publish(cloud_msg);
   }

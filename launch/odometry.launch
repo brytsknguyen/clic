@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
-  <arg name="config_path"       default = "/config/ct_odometry_lvi.yaml" />
-  <arg name="bag_path"          default = "" />  
+  <arg name="dataset_cfg"       default = "/config/ct_odometry_ntu.yaml" />
+  <arg name="bag_path"          default = "/media/tmn/mySataSSD2/DATASETS/NTU_VIRAL/spms_01/spms_01_mod.bag" />  
   <arg name="pasue_time"        default = "-1" />
   <arg name="verbose"           default = "false" />  
   
@@ -9,7 +9,7 @@
   <!-- <node pkg="clic" type="odometry_node" name="$(anon odometry_node)" output="screen" clear_params="true" 
         launch-prefix="gdb -ex run &#45;&#45;args"> -->
   <node pkg="clic" type="odometry_node" name="$(anon odometry_node)" output="screen">
-    <param name="config_path"     type="string" value="$(find clic)$(arg config_path)" />
+    <param name="dataset_cfg"     type="string" value="$(find clic)$(arg dataset_cfg)" />
     
     <!-- if 'bag_path' is none here then use get the 'bag_path' params in the yaml file-->
     <param name="bag_path"        type="string" value="$(arg bag_path)" />

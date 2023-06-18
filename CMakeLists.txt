@@ -29,6 +29,7 @@ find_package(catkin REQUIRED COMPONENTS
   rosbag
   tf
   message_generation
+  livox_ros_driver
 )
 
 find_package(Eigen3 REQUIRED)

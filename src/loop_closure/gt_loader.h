@@ -110,7 +110,7 @@ class GTLoader {
 
         geometry_msgs::PoseStamped geo_ctrl;
         geo_ctrl.header.stamp = t_temp.fromSec(v.timestamp);
-        geo_ctrl.header.frame_id = "/map";
+        geo_ctrl.header.frame_id = "map";
         tf::pointEigenToMsg(v.position, geo_ctrl.pose.position);
         tf::quaternionEigenToMsg(v.orientation.unit_quaternion(),
                                  geo_ctrl.pose.orientation);
@@ -119,7 +119,7 @@ class GTLoader {
 
       nav_msgs::Path traj_ctrl;
       traj_ctrl.header.stamp = ros::Time::now();
-      traj_ctrl.header.frame_id = "/map";
+      traj_ctrl.header.frame_id = "map";
       traj_ctrl.poses = poses_msg;
       pub_aligned_pose_.publish(traj_ctrl);
     }

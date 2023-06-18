@@ -30,11 +30,11 @@ int main(int argc, char **argv) {
   ros::init(argc, argv, "clic");
   ros::NodeHandle nh("~");
 
-  std::string config_path;
-  nh.param<std::string>("config_path", config_path, "ct_odometry.yaml");
-  ROS_INFO("Odometry load %s.", config_path.c_str());
+  std::string dataset_cfg;
+  nh.param<std::string>("dataset_cfg", dataset_cfg, "ct_odometry.yaml");
+  ROS_INFO("Odometry load %s.", dataset_cfg.c_str());
 
-  YAML::Node config_node = YAML::LoadFile(config_path);
+  YAML::Node config_node = YAML::LoadFile(dataset_cfg);
 
   FLAGS_log_dir = "./log";
   FLAGS_colorlogtostderr = true;
