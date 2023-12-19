@@ -1,14 +1,14 @@
 ## Mode
 ## 1 : Odometry_Offline   |  2 : Odometry_Online
-mode: 1
+mode: 2
 
-config_path: /home/ha/ros_ws/catkin_clic/src/clic/config
+config_path: /home/tmn/ros_ws/dev_ws/src/clic/config
 
 imu_yaml: /livox/imu_livox.yaml
 lidar_odom_yaml: /livox/lidar_livox.yaml
 
 ## Bag Param
-bag_path: /media/ha/Backup/dataset/r3live/hku_campus_seq_00.bag
+bag_path: /media/tmn/mySataSSD21/DATASETS/R3live/degenerate_seq_00.bag
 
 bag_start: 1
 bag_durr: -1

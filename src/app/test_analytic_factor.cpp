@@ -34,12 +34,16 @@
 
 #include <visual_odometry/integration_base.h>
 
+#include <thread>
+
 using namespace clic;
 using namespace std;
 
-class FactorTest {
- public:
-  FactorTest() {
+class FactorTest
+{
+public:
+  FactorTest()
+  {
     local_parameterization_ = new LieLocalParameterization<SO3d>();
     analytic_local_parameterization_ =
         new LieAnalyticLocalParameterization<SO3d>();
@@ -56,7 +60,7 @@ class FactorTest {
     solver_options_.minimizer_progress_to_stdout = true;
     solver_options_.update_state_every_iteration = true;
     solver_options_.max_num_iterations = 1;
-    solver_options_.num_threads = 1;
+    solver_options_.num_threads = std::thread::hardware_concurrency();
 
     trajectory_ = std::make_shared<Trajectory>(0.1);
     trajectory_->genRandomTrajectory(8);
@@ -70,30 +74,33 @@ class FactorTest {
   }
 
   void TestLocalVelocityFactorAutoDiff(
-      Eigen::aligned_map<double*, Eigen::MatrixXd>& jacobians,
-      bool use_analytic_factor = false) {
+      Eigen::aligned_map<double *, Eigen::MatrixXd> &jacobians,
+      bool use_analytic_factor = false)
+  {
     int64_t time_ns = local_velocity_.timestamp * S_TO_NS + t_offset_ns_;
 
     SplineMeta<SplineOrder> spline_meta;
     trajectory_->CaculateSplineMeta(
         {{time_ns - t_padding_ns_, time_ns + t_padding_ns_}}, spline_meta);
-    auto* cost_function = auto_diff::IMULocalVelocityFactor::Create(
+    auto *cost_function = auto_diff::IMULocalVelocityFactor::Create(
         time_ns, local_velocity_.p, spline_meta, w_imu_);
 
     /// add so3 knots
-    for (size_t i = 0; i < spline_meta.NumParameters(); i++) {
+    for (size_t i = 0; i < spline_meta.NumParameters(); i++)
+    {
       cost_function->AddParameterBlock(4);
     }
     /// add vec3 knots
-    for (size_t i = 0; i < spline_meta.NumParameters(); i++) {
+    for (size_t i = 0; i < spline_meta.NumParameters(); i++)
+    {
       cost_function->AddParameterBlock(3);
     }
-    cost_function->AddParameterBlock(1);  // t_offset_ns_
+    cost_function->AddParameterBlock(1); // t_offset_ns_
 
     cost_function->SetNumResiduals(3);
 
     ceres::Problem problem(problem_options_);
-    std::vector<double*> vec;
+    std::vector<double *> vec;
     AddControlPoints(spline_meta, vec, false, use_analytic_factor, problem);
     AddControlPoints(spline_meta, vec, true, use_analytic_factor, problem);
     vec.push_back(&t_offset_ns_);
@@ -104,8 +111,9 @@ class FactorTest {
   }
 
   void TestLocalVelocityFactorAnalytic(
-      Eigen::aligned_map<double*, Eigen::MatrixXd>& jacobians,
-      bool use_analytic_factor = true) {
+      Eigen::aligned_map<double *, Eigen::MatrixXd> &jacobians,
+      bool use_analytic_factor = true)
+  {
     int64_t time_ns = local_velocity_.timestamp * S_TO_NS + t_offset_ns_;
 
     SplineMeta<SplineOrder> spline_meta;
@@ -113,11 +121,11 @@ class FactorTest {
         {{time_ns - t_padding_ns_, time_ns + t_padding_ns_}}, spline_meta);
 
     using Functor = analytic_derivative::LocalVelocityFactor;
-    ceres::CostFunction* cost_function = new Functor(
+    ceres::CostFunction *cost_function = new Functor(
         time_ns, local_velocity_.p, spline_meta.segments.at(0), w_imu_);
 
     ceres::Problem problem(problem_options_);
-    std::vector<double*> vec;
+    std::vector<double *> vec;
     AddControlPoints(spline_meta, vec, false, use_analytic_factor, problem);
     AddControlPoints(spline_meta, vec, true, use_analytic_factor, problem);
     vec.push_back(&t_offset_ns_);
@@ -128,8 +136,9 @@ class FactorTest {
   }
 
   void TestImageFeatureFactorAutoDiff(
-      Eigen::aligned_map<double*, Eigen::MatrixXd>& jacobians,
-      int selected_case = 0, bool use_analytic_factor = false) {
+      Eigen::aligned_map<double *, Eigen::MatrixXd> &jacobians,
+      int selected_case = 0, bool use_analytic_factor = false)
+  {
     int k = selected_case;
     int64_t ti_ns = ti_[k] * S_TO_NS;
     int64_t tj_ns = tj_[k] * S_TO_NS;
@@ -142,24 +151,26 @@ class FactorTest {
          {tj_ns_corrected - t_padding_ns_, tj_ns_corrected + t_padding_ns_}},
         spline_meta);
 
-    auto* cost_function = auto_diff::ImageFeatureFactor::Create(
+    auto *cost_function = auto_diff::ImageFeatureFactor::Create(
         ti_ns, pi_[k], tj_ns, pj_[k], spline_meta);
 
     /// add so3 knots
-    for (size_t i = 0; i < spline_meta.NumParameters(); i++) {
+    for (size_t i = 0; i < spline_meta.NumParameters(); i++)
+    {
       cost_function->AddParameterBlock(4);
     }
     /// add vec3 knots
-    for (size_t i = 0; i < spline_meta.NumParameters(); i++) {
+    for (size_t i = 0; i < spline_meta.NumParameters(); i++)
+    {
       cost_function->AddParameterBlock(3);
     }
-    cost_function->AddParameterBlock(1);  // depth inverse
-    cost_function->AddParameterBlock(1);  // time offset
+    cost_function->AddParameterBlock(1); // depth inverse
+    cost_function->AddParameterBlock(1); // time offset
 
     cost_function->SetNumResiduals(2);
 
     ceres::Problem problem(problem_options_);
-    std::vector<double*> vec;
+    std::vector<double *> vec;
     AddControlPoints(spline_meta, vec, false, use_analytic_factor, problem);
     AddControlPoints(spline_meta, vec, true, use_analytic_factor, problem);
     vec.emplace_back(&depth_inv_);
@@ -171,8 +182,9 @@ class FactorTest {
   }
 
   void TestImageFeatureFactorAnalytic(
-      Eigen::aligned_map<double*, Eigen::MatrixXd>& jacobians,
-      int selected_case = 0, bool use_analytic_factor = true) {
+      Eigen::aligned_map<double *, Eigen::MatrixXd> &jacobians,
+      int selected_case = 0, bool use_analytic_factor = true)
+  {
     int k = selected_case;
     int64_t ti_ns = ti_[k] * S_TO_NS;
     int64_t tj_ns = tj_[k] * S_TO_NS;
@@ -186,11 +198,11 @@ class FactorTest {
         spline_meta);
 
     using Functor = analytic_derivative::ImageFeatureFactor;
-    ceres::CostFunction* cost_function =
+    ceres::CostFunction *cost_function =
         new Functor(ti_ns, pi_[k], tj_ns, pj_[k], spline_meta);
 
     ceres::Problem problem(problem_options_);
-    std::vector<double*> vec;
+    std::vector<double *> vec;
     AddControlPoints(spline_meta, vec, false, use_analytic_factor, problem);
     AddControlPoints(spline_meta, vec, true, use_analytic_factor, problem);
     vec.emplace_back(&depth_inv_);
@@ -202,8 +214,9 @@ class FactorTest {
   }
 
   void TestImage3D2DFactorAutoDiff(
-      Eigen::aligned_map<double*, Eigen::MatrixXd>& jacobians,
-      int selected_case = 0, bool use_analytic_factor = false) {
+      Eigen::aligned_map<double *, Eigen::MatrixXd> &jacobians,
+      int selected_case = 0, bool use_analytic_factor = false)
+  {
     int k = selected_case;
     int64_t ti_ns = ti_[k] * S_TO_NS;
 
@@ -214,24 +227,26 @@ class FactorTest {
         {{ti_ns_corrected - t_padding_ns_, ti_ns_corrected + t_padding_ns_}},
         spline_meta);
 
-    auto* cost_function =
+    auto *cost_function =
         auto_diff::Image3D2DFactor::Create(ti_ns, pi_[k], spline_meta);
 
     /// add so3 knots
-    for (size_t i = 0; i < spline_meta.NumParameters(); i++) {
+    for (size_t i = 0; i < spline_meta.NumParameters(); i++)
+    {
       cost_function->AddParameterBlock(4);
     }
     /// add vec3 knots
-    for (size_t i = 0; i < spline_meta.NumParameters(); i++) {
+    for (size_t i = 0; i < spline_meta.NumParameters(); i++)
+    {
       cost_function->AddParameterBlock(3);
     }
-    cost_function->AddParameterBlock(3);  // p_G
-    cost_function->AddParameterBlock(1);  // time offset
+    cost_function->AddParameterBlock(3); // p_G
+    cost_function->AddParameterBlock(1); // time offset
 
     cost_function->SetNumResiduals(2);
 
     ceres::Problem problem(problem_options_);
-    std::vector<double*> vec;
+    std::vector<double *> vec;
     AddControlPoints(spline_meta, vec, false, use_analytic_factor, problem);
     AddControlPoints(spline_meta, vec, true, use_analytic_factor, problem);
     vec.emplace_back(p_G_.data());
@@ -243,8 +258,9 @@ class FactorTest {
   }
 
   void TestImage3D2DFactorAnalytic(
-      Eigen::aligned_map<double*, Eigen::MatrixXd>& jacobians,
-      int selected_case = 0, bool use_analytic_factor = true) {
+      Eigen::aligned_map<double *, Eigen::MatrixXd> &jacobians,
+      int selected_case = 0, bool use_analytic_factor = true)
+  {
     int k = selected_case;
     int64_t ti_ns = ti_[k] * S_TO_NS;
 
@@ -256,11 +272,11 @@ class FactorTest {
         spline_meta);
 
     using Functor = analytic_derivative::Image3D2DFactor;
-    ceres::CostFunction* cost_function =
+    ceres::CostFunction *cost_function =
         new Functor(ti_ns, pi_[k], spline_meta);
 
     ceres::Problem problem(problem_options_);
-    std::vector<double*> vec;
+    std::vector<double *> vec;
     AddControlPoints(spline_meta, vec, false, use_analytic_factor, problem);
     AddControlPoints(spline_meta, vec, true, use_analytic_factor, problem);
     vec.emplace_back(p_G_.data());
@@ -272,8 +288,9 @@ class FactorTest {
   }
 
   void TestImageFeatureOnePoseFactorAutoDiff(
-      Eigen::aligned_map<double*, Eigen::MatrixXd>& jacobians,
-      int selected_case = 0, bool use_analytic_factor = false) {
+      Eigen::aligned_map<double *, Eigen::MatrixXd> &jacobians,
+      int selected_case = 0, bool use_analytic_factor = false)
+  {
     int k = selected_case;
     int64_t time_j_ns = tj_[k] * S_TO_NS;
 
@@ -281,24 +298,26 @@ class FactorTest {
     trajectory_->CaculateSplineMeta({{time_j_ns, time_j_ns}}, spline_meta);
 
     auto pose_Ii_to_G = trajectory_->GetIMUPose(ti_[k]);
-    auto* cost_function = auto_diff::ImageFeatureOnePoseFactor::Create(
+    auto *cost_function = auto_diff::ImageFeatureOnePoseFactor::Create(
         pi_[k], pose_Ii_to_G.so3(), pose_Ii_to_G.translation(), time_j_ns,
         pj_[k], spline_meta);
 
     /// add so3 knots
-    for (size_t i = 0; i < spline_meta.NumParameters(); i++) {
+    for (size_t i = 0; i < spline_meta.NumParameters(); i++)
+    {
       cost_function->AddParameterBlock(4);
     }
     /// add vec3 knots
-    for (size_t i = 0; i < spline_meta.NumParameters(); i++) {
+    for (size_t i = 0; i < spline_meta.NumParameters(); i++)
+    {
       cost_function->AddParameterBlock(3);
     }
-    cost_function->AddParameterBlock(1);  // depth inverse
+    cost_function->AddParameterBlock(1); // depth inverse
 
     cost_function->SetNumResiduals(2);
 
     ceres::Problem problem(problem_options_);
-    std::vector<double*> vec;
+    std::vector<double *> vec;
     AddControlPoints(spline_meta, vec, false, use_analytic_factor, problem);
     AddControlPoints(spline_meta, vec, true, use_analytic_factor, problem);
     vec.emplace_back(&depth_inv_);
@@ -309,8 +328,9 @@ class FactorTest {
   }
 
   void TestImageFeatureOnePoseFactorAnalytic(
-      Eigen::aligned_map<double*, Eigen::MatrixXd>& jacobians,
-      int selected_case = 0, bool use_analytic_factor = true) {
+      Eigen::aligned_map<double *, Eigen::MatrixXd> &jacobians,
+      int selected_case = 0, bool use_analytic_factor = true)
+  {
     int k = selected_case;
     int64_t time_j_ns = tj_[k] * S_TO_NS;
 
@@ -320,12 +340,12 @@ class FactorTest {
     auto pose_Ii_to_G = trajectory_->GetIMUPose(ti_[k]);
 
     using Functor = analytic_derivative::ImageFeatureOnePoseFactor;
-    ceres::CostFunction* cost_function =
+    ceres::CostFunction *cost_function =
         new Functor(pi_[k], pose_Ii_to_G.so3(), pose_Ii_to_G.translation(),
                     time_j_ns, pj_[k], spline_meta);
 
     ceres::Problem problem(problem_options_);
-    std::vector<double*> vec;
+    std::vector<double *> vec;
     AddControlPoints(spline_meta, vec, false, use_analytic_factor, problem);
     AddControlPoints(spline_meta, vec, true, use_analytic_factor, problem);
     vec.emplace_back(&depth_inv_);
@@ -336,22 +356,23 @@ class FactorTest {
   }
 
   void TestImageDepthFactorAutoDiff(
-      Eigen::aligned_map<double*, Eigen::MatrixXd>& jacobians,
-      int selected_case = 0, bool use_analytic_factor = false) {
+      Eigen::aligned_map<double *, Eigen::MatrixXd> &jacobians,
+      int selected_case = 0, bool use_analytic_factor = false)
+  {
     int k = selected_case;
 
     auto pose_Ci_to_G = trajectory_->GetCameraPose(ti_[k]);
     auto pose_Cj_to_G = trajectory_->GetCameraPose(tj_[k]);
     auto pose_CitoCj = pose_Cj_to_G.inverse() * pose_Ci_to_G;
 
-    auto* cost_function = auto_diff::ImageDepthFactor::Create(
+    auto *cost_function = auto_diff::ImageDepthFactor::Create(
         pi_[k], pj_[k], pose_CitoCj.so3(), pose_CitoCj.translation());
 
-    cost_function->AddParameterBlock(1);  // depth inverse
+    cost_function->AddParameterBlock(1); // depth inverse
     cost_function->SetNumResiduals(2);
 
     ceres::Problem problem(problem_options_);
-    std::vector<double*> vec;
+    std::vector<double *> vec;
 
     vec.emplace_back(&depth_inv_);
 
@@ -361,19 +382,20 @@ class FactorTest {
   }
 
   void TestImageDepthFactorAnalytic(
-      Eigen::aligned_map<double*, Eigen::MatrixXd>& jacobians,
-      int selected_case = 0, bool use_analytic_factor = true) {
+      Eigen::aligned_map<double *, Eigen::MatrixXd> &jacobians,
+      int selected_case = 0, bool use_analytic_factor = true)
+  {
     int k = selected_case;
     auto pose_Ci_to_G = trajectory_->GetCameraPose(ti_[k]);
     auto pose_Cj_to_G = trajectory_->GetCameraPose(tj_[k]);
     auto pose_CitoCj = pose_Cj_to_G.inverse() * pose_Ci_to_G;
 
     using Functor = analytic_derivative::ImageDepthFactor;
-    ceres::CostFunction* cost_function = new Functor(
+    ceres::CostFunction *cost_function = new Functor(
         pi_[k], pj_[k], pose_CitoCj.so3(), pose_CitoCj.translation());
 
     ceres::Problem problem(problem_options_);
-    std::vector<double*> vec;
+    std::vector<double *> vec;
     vec.emplace_back(&depth_inv_);
 
     problem.AddResidualBlock(cost_function, NULL, vec);
@@ -382,28 +404,31 @@ class FactorTest {
   }
 
   void TestEpipolarFactorAutoDiff(
-      Eigen::aligned_map<double*, Eigen::MatrixXd>& jacobians,
-      bool use_analytic_factor = false) {
+      Eigen::aligned_map<double *, Eigen::MatrixXd> &jacobians,
+      bool use_analytic_factor = false)
+  {
     int64_t time_i_ns = Epipolar_ti_ * S_TO_NS;
     SplineMeta<SplineOrder> spline_meta;
     trajectory_->CaculateSplineMeta({{time_i_ns, time_i_ns}}, spline_meta);
-    auto* cost_function = auto_diff::EpipolarFactor::Create(
+    auto *cost_function = auto_diff::EpipolarFactor::Create(
         time_i_ns, Epipolar_xi_, Epipolar_xk_, Epipolar_S_GtoCk_,
         Epipolar_p_CkinG_, spline_meta, Epipolar_weight_);
 
     /// add so3 knots
-    for (size_t i = 0; i < spline_meta.NumParameters(); i++) {
+    for (size_t i = 0; i < spline_meta.NumParameters(); i++)
+    {
       cost_function->AddParameterBlock(4);
     }
     /// add vec3 knots
-    for (size_t i = 0; i < spline_meta.NumParameters(); i++) {
+    for (size_t i = 0; i < spline_meta.NumParameters(); i++)
+    {
       cost_function->AddParameterBlock(3);
     }
 
     cost_function->SetNumResiduals(1);
 
     ceres::Problem problem(problem_options_);
-    std::vector<double*> vec;
+    std::vector<double *> vec;
     AddControlPoints(spline_meta, vec, false, use_analytic_factor, problem);
     AddControlPoints(spline_meta, vec, true, use_analytic_factor, problem);
 
@@ -413,19 +438,20 @@ class FactorTest {
   }
 
   void TestEpipolarFactorAnalytic(
-      Eigen::aligned_map<double*, Eigen::MatrixXd>& jacobians,
-      int selected_case = 0, bool use_analytic_factor = true) {
+      Eigen::aligned_map<double *, Eigen::MatrixXd> &jacobians,
+      int selected_case = 0, bool use_analytic_factor = true)
+  {
     int64_t time_i_ns = Epipolar_ti_ * S_TO_NS;
     SplineMeta<SplineOrder> spline_meta;
     trajectory_->CaculateSplineMeta({{time_i_ns, time_i_ns}}, spline_meta);
 
     using Functor = analytic_derivative::EpipolarFactor;
-    ceres::CostFunction* cost_function =
+    ceres::CostFunction *cost_function =
         new Functor(time_i_ns, Epipolar_xi_, Epipolar_xk_, Epipolar_S_GtoCk_,
                     Epipolar_p_CkinG_, spline_meta, Epipolar_weight_);
 
     ceres::Problem problem(problem_options_);
-    std::vector<double*> vec;
+    std::vector<double *> vec;
     AddControlPoints(spline_meta, vec, false, use_analytic_factor, problem);
     AddControlPoints(spline_meta, vec, true, use_analytic_factor, problem);
 
@@ -435,8 +461,9 @@ class FactorTest {
   }
 
   void TestLoamFeatureFactorAutoDiff(
-      Eigen::aligned_map<double*, Eigen::MatrixXd>& jacobians,
-      bool use_analytic_factor = false) {
+      Eigen::aligned_map<double *, Eigen::MatrixXd> &jacobians,
+      bool use_analytic_factor = false)
+  {
     int64_t time_map_ns = pc_corr_.t_map * S_TO_NS;
     int64_t time_point_ns = pc_corr_.t_point * S_TO_NS;
     SplineMeta<SplineOrder> spline_meta;
@@ -444,25 +471,27 @@ class FactorTest {
         {{time_map_ns, time_map_ns}, {time_point_ns, time_point_ns}},
         spline_meta);
 
-    auto* cost_function = auto_diff::PointFeatureFactor::Create(
+    auto *cost_function = auto_diff::PointFeatureFactor::Create(
         time_point_ns, time_map_ns, pc_corr_, spline_meta, w_loam_);
 
     /// add so3 knots
-    for (size_t i = 0; i < spline_meta.NumParameters(); i++) {
+    for (size_t i = 0; i < spline_meta.NumParameters(); i++)
+    {
       cost_function->AddParameterBlock(4);
     }
     /// add vec3 knots
-    for (size_t i = 0; i < spline_meta.NumParameters(); i++) {
+    for (size_t i = 0; i < spline_meta.NumParameters(); i++)
+    {
       cost_function->AddParameterBlock(3);
     }
-    cost_function->AddParameterBlock(4);  // R_LtoI
-    cost_function->AddParameterBlock(3);  // p_LinI
-    cost_function->AddParameterBlock(1);  // time offset
+    cost_function->AddParameterBlock(4); // R_LtoI
+    cost_function->AddParameterBlock(3); // p_LinI
+    cost_function->AddParameterBlock(1); // time offset
 
     cost_function->SetNumResiduals(1);
 
     ceres::Problem problem(problem_options_);
-    std::vector<double*> vec;
+    std::vector<double *> vec;
     AddControlPoints(spline_meta, vec, false, use_analytic_factor, problem);
     AddControlPoints(spline_meta, vec, true, use_analytic_factor, problem);
     vec.emplace_back(S_LtoI_.data());
@@ -476,8 +505,9 @@ class FactorTest {
   }
 
   void TestLoamFeatureFactorAnalytic(
-      Eigen::aligned_map<double*, Eigen::MatrixXd>& jacobians,
-      bool use_analytic_factor = true) {
+      Eigen::aligned_map<double *, Eigen::MatrixXd> &jacobians,
+      bool use_analytic_factor = true)
+  {
     int64_t time_point_ns = pc_corr_.t_point * S_TO_NS;
     SplineMeta<SplineOrder> spline_meta;
     trajectory_->CaculateSplineMeta({{time_point_ns, time_point_ns}},
@@ -488,12 +518,12 @@ class FactorTest {
     Eigen::Vector3d p_GinM = S_GtoM * (-T_MtoG.translation());
 
     using Functor = analytic_derivative::LoamFeatureFactor;
-    ceres::CostFunction* cost_function =
+    ceres::CostFunction *cost_function =
         new Functor(time_point_ns, pc_corr_, spline_meta.segments.at(0), S_GtoM,
                     p_GinM, S_LtoI_, p_LinI_, w_loam_);
 
     ceres::Problem problem(problem_options_);
-    std::vector<double*> vec;
+    std::vector<double *> vec;
     AddControlPoints(spline_meta, vec, false, use_analytic_factor, problem);
     AddControlPoints(spline_meta, vec, true, use_analytic_factor, problem);
 
@@ -503,8 +533,9 @@ class FactorTest {
   }
 
   void TestRalativeLoamFeatureFactorAnalytic(
-      Eigen::aligned_map<double*, Eigen::MatrixXd>& jacobians,
-      bool use_analytic_factor = true) {
+      Eigen::aligned_map<double *, Eigen::MatrixXd> &jacobians,
+      bool use_analytic_factor = true)
+  {
     int64_t time_map_ns = pc_corr_.t_map * S_TO_NS;
     int64_t time_point_ns = pc_corr_.t_point * S_TO_NS;
     SplineMeta<SplineOrder> spline_meta;
@@ -513,11 +544,11 @@ class FactorTest {
         spline_meta);
 
     using Functor = analytic_derivative::RalativeLoamFeatureFactor;
-    ceres::CostFunction* cost_function =
+    ceres::CostFunction *cost_function =
         new Functor(time_point_ns, time_map_ns, pc_corr_, spline_meta, w_loam_);
 
     ceres::Problem problem(problem_options_);
-    std::vector<double*> vec;
+    std::vector<double *> vec;
     AddControlPoints(spline_meta, vec, false, use_analytic_factor, problem);
     AddControlPoints(spline_meta, vec, true, use_analytic_factor, problem);
 
@@ -527,30 +558,33 @@ class FactorTest {
   }
 
   void TestLoamFeatureOptMapPoseFactorAutoDiff(
-      Eigen::aligned_map<double*, Eigen::MatrixXd>& jacobians,
-      bool use_analytic_factor = false) {
+      Eigen::aligned_map<double *, Eigen::MatrixXd> &jacobians,
+      bool use_analytic_factor = false)
+  {
     int64_t time_point_ns = pc_corr_.t_point * S_TO_NS;
     SplineMeta<SplineOrder> spline_meta;
     trajectory_->CaculateSplineMeta({{time_point_ns, time_point_ns}},
                                     spline_meta);
-    auto* cost_function = auto_diff::LoamFeatureOptMapPoseFactor::Create(
+    auto *cost_function = auto_diff::LoamFeatureOptMapPoseFactor::Create(
         time_point_ns, pc_corr_, spline_meta, w_loam_);
 
     /// add so3 knots
-    for (size_t i = 0; i < spline_meta.NumParameters(); i++) {
+    for (size_t i = 0; i < spline_meta.NumParameters(); i++)
+    {
       cost_function->AddParameterBlock(4);
     }
     /// add vec3 knots
-    for (size_t i = 0; i < spline_meta.NumParameters(); i++) {
+    for (size_t i = 0; i < spline_meta.NumParameters(); i++)
+    {
       cost_function->AddParameterBlock(3);
     }
-    cost_function->AddParameterBlock(4);  // map R
-    cost_function->AddParameterBlock(3);  // map p
+    cost_function->AddParameterBlock(4); // map R
+    cost_function->AddParameterBlock(3); // map p
 
     cost_function->SetNumResiduals(1);
 
     ceres::Problem problem(problem_options_);
-    std::vector<double*> vec;
+    std::vector<double *> vec;
     AddControlPoints(spline_meta, vec, false, use_analytic_factor, problem);
     AddControlPoints(spline_meta, vec, true, use_analytic_factor, problem);
     vec.emplace_back(S_ImtoG_.data());
@@ -563,19 +597,20 @@ class FactorTest {
   }
 
   void TestLoamFeatureOptMapPoseFactorAnalytic(
-      Eigen::aligned_map<double*, Eigen::MatrixXd>& jacobians,
-      bool use_analytic_factor = true) {
+      Eigen::aligned_map<double *, Eigen::MatrixXd> &jacobians,
+      bool use_analytic_factor = true)
+  {
     int64_t time_point_ns = pc_corr_.t_point * S_TO_NS;
     SplineMeta<SplineOrder> spline_meta;
     trajectory_->CaculateSplineMeta({{time_point_ns, time_point_ns}},
                                     spline_meta);
 
     using Functor = analytic_derivative::LoamFeatureOptMapPoseFactor;
-    ceres::CostFunction* cost_function = new Functor(
+    ceres::CostFunction *cost_function = new Functor(
         time_point_ns, pc_corr_, spline_meta.segments.at(0), w_loam_);
 
     ceres::Problem problem(problem_options_);
-    std::vector<double*> vec;
+    std::vector<double *> vec;
     AddControlPoints(spline_meta, vec, false, use_analytic_factor, problem);
     AddControlPoints(spline_meta, vec, true, use_analytic_factor, problem);
     vec.emplace_back(S_ImtoG_.data());
@@ -589,30 +624,33 @@ class FactorTest {
   }
 
   void TestIMUPoseFactorAutoDiff(
-      Eigen::aligned_map<double*, Eigen::MatrixXd>& jacobians,
-      bool use_analytic_factor = false) {
+      Eigen::aligned_map<double *, Eigen::MatrixXd> &jacobians,
+      bool use_analytic_factor = false)
+  {
     int64_t time_ns = pose_data_.timestamp * S_TO_NS + t_offset_ns_;
     SplineMeta<SplineOrder> spline_meta;
     trajectory_->CaculateSplineMeta(
         {{time_ns - t_padding_ns_, time_ns + t_padding_ns_}}, spline_meta);
 
-    auto* cost_function = auto_diff::IMUPoseFactor::Create(
+    auto *cost_function = auto_diff::IMUPoseFactor::Create(
         time_ns, pose_data_, spline_meta, w_pose_, w_pose_);
 
     /// add so3 knots
-    for (size_t i = 0; i < spline_meta.NumParameters(); i++) {
+    for (size_t i = 0; i < spline_meta.NumParameters(); i++)
+    {
       cost_function->AddParameterBlock(4);
     }
     /// add vec3 knots
-    for (size_t i = 0; i < spline_meta.NumParameters(); i++) {
+    for (size_t i = 0; i < spline_meta.NumParameters(); i++)
+    {
       cost_function->AddParameterBlock(3);
     }
-    cost_function->AddParameterBlock(1);  // t_offset_ns_
+    cost_function->AddParameterBlock(1); // t_offset_ns_
 
     cost_function->SetNumResiduals(6);
 
     ceres::Problem problem(problem_options_);
-    std::vector<double*> vec;
+    std::vector<double *> vec;
     AddControlPoints(spline_meta, vec, false, use_analytic_factor, problem);
     AddControlPoints(spline_meta, vec, true, use_analytic_factor, problem);
     vec.push_back(&t_offset_ns_);
@@ -623,8 +661,9 @@ class FactorTest {
   }
 
   void TestIMUPoseFactorAnalytic(
-      Eigen::aligned_map<double*, Eigen::MatrixXd>& jacobians,
-      bool use_analytic_factor = true) {
+      Eigen::aligned_map<double *, Eigen::MatrixXd> &jacobians,
+      bool use_analytic_factor = true)
+  {
     Eigen::Matrix<double, 6, 1> info_vec =
         w_pose_ * Eigen::Matrix<double, 6, 1>::Ones();
 
@@ -633,11 +672,11 @@ class FactorTest {
     trajectory_->CaculateSplineMeta(
         {{time_ns - t_padding_ns_, time_ns + t_padding_ns_}}, spline_meta);
 
-    ceres::CostFunction* cost_function = new analytic_derivative::IMUPoseFactor(
+    ceres::CostFunction *cost_function = new analytic_derivative::IMUPoseFactor(
         time_ns, pose_data_, spline_meta.segments.at(0), info_vec);
 
     ceres::Problem problem(problem_options_);
-    std::vector<double*> vec;
+    std::vector<double *> vec;
     AddControlPoints(spline_meta, vec, false, use_analytic_factor, problem);
     AddControlPoints(spline_meta, vec, true, use_analytic_factor, problem);
     vec.push_back(&t_offset_ns_);
@@ -648,33 +687,36 @@ class FactorTest {
   }
 
   void TestIMUFactorAutoDiff(
-      Eigen::aligned_map<double*, Eigen::MatrixXd>& jacobians,
-      bool use_analytic_factor = false) {
+      Eigen::aligned_map<double *, Eigen::MatrixXd> &jacobians,
+      bool use_analytic_factor = false)
+  {
     int64_t time_ns = imu_data_.timestamp * S_TO_NS + t_offset_ns_;
     SplineMeta<SplineOrder> spline_meta;
     trajectory_->CaculateSplineMeta(
         {{time_ns - t_padding_ns_, time_ns + t_padding_ns_}}, spline_meta);
 
-    auto* cost_function = auto_diff::IMUFactor::Create(
+    auto *cost_function = auto_diff::IMUFactor::Create(
         time_ns, imu_data_, spline_meta, w_imu_, w_imu_);
 
     /// add SO3 knots
-    for (size_t i = 0; i < spline_meta.NumParameters(); i++) {
+    for (size_t i = 0; i < spline_meta.NumParameters(); i++)
+    {
       cost_function->AddParameterBlock(4);
     }
     /// add R3 knots
-    for (size_t i = 0; i < spline_meta.NumParameters(); i++) {
+    for (size_t i = 0; i < spline_meta.NumParameters(); i++)
+    {
       cost_function->AddParameterBlock(3);
     }
-    cost_function->AddParameterBlock(3);  // gyro bias
-    cost_function->AddParameterBlock(3);  // acce bias
-    cost_function->AddParameterBlock(3);  // gravity
-    cost_function->AddParameterBlock(1);  // t_offset_ns_
+    cost_function->AddParameterBlock(3); // gyro bias
+    cost_function->AddParameterBlock(3); // acce bias
+    cost_function->AddParameterBlock(3); // gravity
+    cost_function->AddParameterBlock(1); // t_offset_ns_
 
     cost_function->SetNumResiduals(6);
 
     ceres::Problem problem(problem_options_);
-    std::vector<double*> vec;
+    std::vector<double *> vec;
     AddControlPoints(spline_meta, vec, false, use_analytic_factor, problem);
     AddControlPoints(spline_meta, vec, true, use_analytic_factor, problem);
     vec.emplace_back(imu_bias_.gyro_bias.data());
@@ -690,8 +732,9 @@ class FactorTest {
   }
 
   void TestIMUFactorAnalytic(
-      Eigen::aligned_map<double*, Eigen::MatrixXd>& jacobians,
-      bool use_analytic_factor = true) {
+      Eigen::aligned_map<double *, Eigen::MatrixXd> &jacobians,
+      bool use_analytic_factor = true)
+  {
     int64_t time_ns = imu_data_.timestamp * S_TO_NS + t_offset_ns_;
     SplineMeta<SplineOrder> spline_meta;
     trajectory_->CaculateSplineMeta(
@@ -699,11 +742,11 @@ class FactorTest {
 
     Eigen::Matrix<double, 6, 1> info_vec =
         w_imu_ * Eigen::Matrix<double, 6, 1>::Ones();
-    ceres::CostFunction* cost_function = new analytic_derivative::IMUFactor(
+    ceres::CostFunction *cost_function = new analytic_derivative::IMUFactor(
         time_ns, imu_data_, spline_meta.segments.at(0), info_vec);
 
     ceres::Problem problem(problem_options_);
-    std::vector<double*> vec;
+    std::vector<double *> vec;
     AddControlPoints(spline_meta, vec, false, use_analytic_factor, problem);
     AddControlPoints(spline_meta, vec, true, use_analytic_factor, problem);
     vec.emplace_back(imu_bias_.gyro_bias.data());
@@ -719,22 +762,25 @@ class FactorTest {
   }
 
   void TestPreIntegrationFactorAutoDiff(
-      Eigen::aligned_map<double*, Eigen::MatrixXd>& jacobians,
-      bool use_analytic_factor = false) {
+      Eigen::aligned_map<double *, Eigen::MatrixXd> &jacobians,
+      bool use_analytic_factor = false)
+  {
     int64_t time0_ns = t_pre_inte[0] * S_TO_NS;
     int64_t time1_ns = t_pre_inte[1] * S_TO_NS;
     SplineMeta<SplineOrder> spline_meta;
     SplineMeta<BiasSplineOrder> spline_meta_bias;
     trajectory_->CaculateSplineMeta({{time0_ns, time1_ns}}, spline_meta);
 
-    auto* cost_function = auto_diff::PreIntegrationFactor::Create(
+    auto *cost_function = auto_diff::PreIntegrationFactor::Create(
         pre_integration_, time0_ns, time1_ns, spline_meta);
 
-    for (size_t i = 0; i < spline_meta.NumParameters(); i++) {
-      cost_function->AddParameterBlock(4);  /// add SO3 knots
+    for (size_t i = 0; i < spline_meta.NumParameters(); i++)
+    {
+      cost_function->AddParameterBlock(4); /// add SO3 knots
     }
-    for (size_t i = 0; i < spline_meta.NumParameters(); i++) {
-      cost_function->AddParameterBlock(3);  /// add R3 knots
+    for (size_t i = 0; i < spline_meta.NumParameters(); i++)
+    {
+      cost_function->AddParameterBlock(3); /// add R3 knots
     }
     cost_function->AddParameterBlock(3);
     cost_function->AddParameterBlock(3);
@@ -744,7 +790,7 @@ class FactorTest {
     cost_function->SetNumResiduals(15);
 
     ceres::Problem problem(problem_options_);
-    std::vector<double*> vec;
+    std::vector<double *> vec;
     AddControlPoints(spline_meta, vec, false, use_analytic_factor, problem);
     AddControlPoints(spline_meta, vec, true, use_analytic_factor, problem);
     vec.emplace_back(imu_bias_.gyro_bias.data());
@@ -758,16 +804,17 @@ class FactorTest {
   }
 
   void TestPreIntegrationFactorAnalytic(
-      Eigen::aligned_map<double*, Eigen::MatrixXd>& jacobians,
-      std::vector<double*>& vec, std::vector<std::string>& param_descri,
-      bool use_analytic_factor = true) {
+      Eigen::aligned_map<double *, Eigen::MatrixXd> &jacobians,
+      std::vector<double *> &vec, std::vector<std::string> &param_descri,
+      bool use_analytic_factor = true)
+  {
     int64_t time0_ns = t_pre_inte[0] * S_TO_NS;
     int64_t time1_ns = t_pre_inte[1] * S_TO_NS;
     SplineMeta<SplineOrder> spline_meta;
     SplineMeta<BiasSplineOrder> spline_meta_bias;
     trajectory_->CaculateSplineMeta({{time0_ns, time1_ns}}, spline_meta);
 
-    ceres::CostFunction* cost_function =
+    ceres::CostFunction *cost_function =
         new analytic_derivative::PreIntegrationFactor(
             pre_integration_, time0_ns, time1_ns, spline_meta);
 
@@ -796,8 +843,9 @@ class FactorTest {
   }
 
   void TestRelativeRotFactorAutoDiff(
-      Eigen::aligned_map<double*, Eigen::MatrixXd>& jacobians,
-      int selected_case = 0, bool use_analytic_factor = false) {
+      Eigen::aligned_map<double *, Eigen::MatrixXd> &jacobians,
+      int selected_case = 0, bool use_analytic_factor = false)
+  {
     int k = selected_case;
     int64_t time_a_ns = ta_[k] * S_TO_NS;
     int64_t time_b_ns = tb_[k] * S_TO_NS;
@@ -805,24 +853,26 @@ class FactorTest {
     trajectory_->CaculateSplineMeta(
         {{time_a_ns, time_a_ns}, {time_b_ns, time_b_ns}}, spline_meta);
 
-    auto* cost_function = auto_diff::RelativeOrientationFactor::Create(
+    auto *cost_function = auto_diff::RelativeOrientationFactor::Create(
         S_BtoA_, time_a_ns, time_b_ns, spline_meta);
 
-    for (size_t i = 0; i < spline_meta.NumParameters(); i++) {
-      cost_function->AddParameterBlock(4);  /// add SO3 knots
+    for (size_t i = 0; i < spline_meta.NumParameters(); i++)
+    {
+      cost_function->AddParameterBlock(4); /// add SO3 knots
     }
     cost_function->SetNumResiduals(3);
 
     ceres::Problem problem(problem_options_);
-    std::vector<double*> vec;
+    std::vector<double *> vec;
     AddControlPoints(spline_meta, vec, false, use_analytic_factor, problem);
     problem.AddResidualBlock(cost_function, NULL, vec);
     GetJacobian(vec, problem, cost_function->num_residuals(), jacobians);
   }
 
   void TestRelativeRotFactorAnalytic(
-      Eigen::aligned_map<double*, Eigen::MatrixXd>& jacobians,
-      int selected_case = 0, bool use_analytic_factor = true) {
+      Eigen::aligned_map<double *, Eigen::MatrixXd> &jacobians,
+      int selected_case = 0, bool use_analytic_factor = true)
+  {
     int k = selected_case;
     int64_t time_a_ns = ta_[k] * S_TO_NS;
     int64_t time_b_ns = tb_[k] * S_TO_NS;
@@ -831,12 +881,12 @@ class FactorTest {
         {{time_a_ns, time_a_ns}, {time_b_ns, time_b_ns}}, spline_meta);
 
     Eigen::Vector3d sqrt_info_vec = Eigen::Vector3d(0.33, 0.27, 0.11);
-    ceres::CostFunction* cost_function =
+    ceres::CostFunction *cost_function =
         new analytic_derivative::RelativeOrientationFactor(
             S_BtoA_, time_a_ns, time_b_ns, spline_meta, sqrt_info_vec);
 
     ceres::Problem problem(problem_options_);
-    std::vector<double*> vec;
+    std::vector<double *> vec;
     AddControlPoints(spline_meta, vec, false, use_analytic_factor, problem);
     problem.AddResidualBlock(cost_function, NULL, vec);
 
@@ -845,29 +895,37 @@ class FactorTest {
 
   void CheckJacobian(
       std::string factor_descri,
-      Eigen::aligned_map<double*, Eigen::MatrixXd>& jacobs_automatic,
-      Eigen::aligned_map<double*, Eigen::MatrixXd>& jacobs_analytic,
-      const std::vector<double*>& parameters = {},
-      const std::vector<std::string>& param_descri = {}) {
+      Eigen::aligned_map<double *, Eigen::MatrixXd> &jacobs_automatic,
+      Eigen::aligned_map<double *, Eigen::MatrixXd> &jacobs_analytic,
+      const std::vector<double *> &parameters = {},
+      const std::vector<std::string> &param_descri = {})
+  {
     bool check_pass = true;
     size_t cnt = 0;
 
-    std::map<double*, int> parameters_map;
-    if (!parameters.empty() && !param_descri.empty()) {
+    std::map<double *, int> parameters_map;
+    if (!parameters.empty() && !param_descri.empty())
+    {
       for (int i = 0; i < (int)parameters.size(); ++i)
         parameters_map[parameters.at(i)] = i;
     }
 
-    for (auto const& v : jacobs_analytic) {
+    for (auto const &v : jacobs_analytic)
+    {
       auto iter = jacobs_automatic.find(v.first);
-      if (jacobs_automatic.end() != iter) {
+      if (jacobs_automatic.end() != iter)
+      {
         Eigen::MatrixXd diff = iter->second - v.second;
-        if (diff.cwiseAbs().maxCoeff() > 1e-6) {
+        if (diff.cwiseAbs().maxCoeff() > 1e-6)
+        {
           // 按内存地址大小的距离，不是误差项中参数添加顺序的索引
           int idx;
-          if (parameters.empty()) {
+          if (parameters.empty())
+          {
             idx = std::distance(jacobs_automatic.begin(), iter);
-          } else {
+          }
+          else
+          {
             idx = parameters_map.at(iter->first);
           }
 
@@ -886,7 +944,9 @@ class FactorTest {
 
           std::cout << std::setiosflags(ios::fixed) << std::setw(3)
                     << std::setprecision(3);
-        } else {
+        }
+        else
+        {
           cnt++;
         }
       }
@@ -894,17 +954,20 @@ class FactorTest {
 
     cout << factor_descri << " check [" << cnt << "/" << jacobs_analytic.size()
          << "] jacobians ok.\n\n";
-    if (!check_pass) {
-      cout << RED << factor_descri << " has some problems.\n" << RESET;
+    if (!check_pass)
+    {
+      cout << RED << factor_descri << " has some problems.\n"
+           << RESET;
     }
   }
 
- private:
-  void GenerateData() {
+private:
+  void GenerateData()
+  {
     Eigen::Vector3d sqrt_info_vec = Eigen::Vector3d(0.33, 0.27, 0.11);
 
     t_offset_ns_ = 1.e6;
-    t_padding_ns_ = 1e8;  // 0.1s
+    t_padding_ns_ = 1e8; // 0.1s
 
     // relative orientation
     ta_[0] = 0.11;
@@ -945,7 +1008,7 @@ class FactorTest {
     p_G_ = Eigen::Vector3d(3.1, 2.8, 1.3);
     // S_CtoI_ = Sophus::SO3<double>::exp(Eigen::Vector3d::Zero() * M_PI);
     S_CtoI_ = Sophus::SO3<double>::exp(Eigen::Vector3d::Random() * M_PI);
-    p_CinI_ = Eigen::Vector3d(0.1, 0.2, 0.3);  // Eigen::Vector3d::Zero();//
+    p_CinI_ = Eigen::Vector3d(0.1, 0.2, 0.3); // Eigen::Vector3d::Zero();//
 
     analytic_derivative::ImageFeatureFactor::SetParam(S_CtoI_, p_CinI_);
     auto_diff::ImageFeatureFactor::SetParam(S_CtoI_, p_CinI_);
@@ -1025,21 +1088,30 @@ class FactorTest {
     w_imu_ = 3.4;
   }
 
-  void AddControlPoints(const SplineMeta<SplineOrder>& spline_meta,
-                        std::vector<double*>& vec, bool addPosKnot,
-                        bool use_analytic_factor, ceres::Problem& problem) {
-    for (auto const& seg : spline_meta.segments) {
+  void AddControlPoints(const SplineMeta<SplineOrder> &spline_meta,
+                        std::vector<double *> &vec, bool addPosKnot,
+                        bool use_analytic_factor, ceres::Problem &problem)
+  {
+    for (auto const &seg : spline_meta.segments)
+    {
       size_t start_idx = trajectory_->GetCtrlIndex(seg.t0_ns);
-      for (size_t i = start_idx; i < (start_idx + seg.NumParameters()); ++i) {
-        if (addPosKnot) {
+      for (size_t i = start_idx; i < (start_idx + seg.NumParameters()); ++i)
+      {
+        if (addPosKnot)
+        {
           vec.emplace_back(trajectory_->getKnotPos(i).data());
           problem.AddParameterBlock(trajectory_->getKnotPos(i).data(), 3);
-        } else {
+        }
+        else
+        {
           vec.emplace_back(trajectory_->getKnotSO3(i).data());
-          if (use_analytic_factor) {
+          if (use_analytic_factor)
+          {
             problem.AddParameterBlock(trajectory_->getKnotSO3(i).data(), 4,
                                       analytic_local_parameterization_);
-          } else {
+          }
+          else
+          {
             problem.AddParameterBlock(trajectory_->getKnotSO3(i).data(), 4,
                                       local_parameterization_);
           }
@@ -1048,9 +1120,10 @@ class FactorTest {
     }
   }
 
-  void GetJacobian(std::vector<double*> param_vec, ceres::Problem& problem,
+  void GetJacobian(std::vector<double *> param_vec, ceres::Problem &problem,
                    int residual_num,
-                   Eigen::aligned_map<double*, Eigen::MatrixXd>& jacobians) {
+                   Eigen::aligned_map<double *, Eigen::MatrixXd> &jacobians)
+  {
     double cost = 0.0;
     ceres::CRSMatrix J;
     std::vector<double> residuals;
@@ -1059,8 +1132,10 @@ class FactorTest {
 
     Eigen::MatrixXd dense_jacobian(J.num_rows, J.num_cols);
     dense_jacobian.setZero();
-    for (int r = 0; r < J.num_rows; ++r) {
-      for (int idx = J.rows[r]; idx < J.rows[r + 1]; ++idx) {
+    for (int r = 0; r < J.num_rows; ++r)
+    {
+      for (int idx = J.rows[r]; idx < J.rows[r + 1]; ++idx)
+      {
         const int c = J.cols[idx];
         dense_jacobian(r, c) = J.values[idx];
       }
@@ -1068,8 +1143,10 @@ class FactorTest {
 
     int cnt = 0;
     std::string right_descri = ")= ";
-    if (residual_num > 1) right_descri += "\n";
-    for (size_t i = 0; i < param_vec.size(); i++) {
+    if (residual_num > 1)
+      right_descri += "\n";
+    for (size_t i = 0; i < param_vec.size(); i++)
+    {
       int local_size = problem.ParameterBlockLocalSize(param_vec.at(i));
       Eigen::MatrixXd jacob = Eigen::MatrixXd::Zero(residual_num, local_size);
       jacob = dense_jacobian.block(0, cnt, residual_num, local_size);
@@ -1082,7 +1159,8 @@ class FactorTest {
     }
 
     std::cout << "cost = " << cost << "; redisual: ";
-    for (auto& r : residuals) std::cout << r << ", ";
+    for (auto &r : residuals)
+      std::cout << r << ", ";
     std::cout << "\n";
 
     // std::cout << "J = (" << J.num_rows << ", " << J.num_cols
@@ -1098,17 +1176,19 @@ class FactorTest {
     // }
   }
 
-  void GetJacobian(std::vector<double*> param_vec,
-                   const ceres::CostFunction* cost_function) {
+  void GetJacobian(std::vector<double *> param_vec,
+                   const ceres::CostFunction *cost_function)
+  {
     int num_residuals = cost_function->num_residuals();
     Eigen::MatrixXd residuals;
     residuals.setZero(num_residuals, 1);
 
-    std::vector<double*> J_vec;
+    std::vector<double *> J_vec;
     Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
         Jacob[cost_function->parameter_block_sizes().size()];
     size_t cnt = 0;
-    for (auto const v : cost_function->parameter_block_sizes()) {
+    for (auto const v : cost_function->parameter_block_sizes())
+    {
       Jacob[cnt].setZero(num_residuals, v);
       J_vec.emplace_back(Jacob[cnt++].data());
     }
@@ -1116,15 +1196,17 @@ class FactorTest {
     cost_function->Evaluate(param_vec.data(), residuals.data(), J_vec.data());
     cout << "residuals = " << residuals.transpose() << endl;
 
-    for (size_t i = 0; i < J_vec.size(); ++i) {
+    for (size_t i = 0; i < J_vec.size(); ++i)
+    {
       if (num_residuals == 1)
         cout << "J[" << i << "] = " << Jacob[i] << endl;
       else
-        cout << "J[" << i << "] = \n" << Jacob[i] << endl;
+        cout << "J[" << i << "] = \n"
+             << Jacob[i] << endl;
     }
   }
 
- public:
+public:
   Trajectory::Ptr trajectory_;
 
   double t_offset_ns_;
@@ -1135,7 +1217,7 @@ class FactorTest {
 
   // PreIntegration factor
   double t_pre_inte[2];
-  IntegrationBase* pre_integration_;
+  IntegrationBase *pre_integration_;
 
   // local velocity factor
   VecData local_velocity_;
@@ -1176,22 +1258,24 @@ class FactorTest {
 
   double w_loam_, w_pose_, w_imu_;
 
-  ceres::LocalParameterization* local_parameterization_;
-  ceres::LocalParameterization* analytic_local_parameterization_;
-  ceres::HomogeneousVectorParameterization* homo_vec_local_parameterization_;
+  ceres::LocalParameterization *local_parameterization_;
+  ceres::LocalParameterization *analytic_local_parameterization_;
+  ceres::HomogeneousVectorParameterization *homo_vec_local_parameterization_;
   ceres::Problem::Options problem_options_;
   ceres::Solver::Options solver_options_;
 };
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv)
+{
   FactorTest factor_test;
 
   std::cout << std::setiosflags(ios::fixed) << std::setprecision(3);
   cout << "\n ===== TEST ===== \n\n";
 
-  for (int i = 0; i < 2; ++i) {
-    Eigen::aligned_map<double*, Eigen::MatrixXd> jacobs_automatic;
-    Eigen::aligned_map<double*, Eigen::MatrixXd> jacobs_analytic;
+  for (int i = 0; i < 2; ++i)
+  {
+    Eigen::aligned_map<double *, Eigen::MatrixXd> jacobs_automatic;
+    Eigen::aligned_map<double *, Eigen::MatrixXd> jacobs_analytic;
 
     std::string descri =
         "relative orientation factor [case " + std::to_string(i) + "]";
@@ -1203,13 +1287,14 @@ int main(int argc, char** argv) {
 
   double ti[2] = {0.21, 0.21};
   double tj[2] = {0.35, 0.695};
-  for (int i = 0; i < 2; ++i) {
+  for (int i = 0; i < 2; ++i)
+  {
     factor_test.t_pre_inte[0] = ti[i];
     factor_test.t_pre_inte[1] = tj[i];
 
-    Eigen::aligned_map<double*, Eigen::MatrixXd> jacobs_automatic;
-    Eigen::aligned_map<double*, Eigen::MatrixXd> jacobs_analytic;
-    std::vector<double*> param_vec;
+    Eigen::aligned_map<double *, Eigen::MatrixXd> jacobs_automatic;
+    Eigen::aligned_map<double *, Eigen::MatrixXd> jacobs_analytic;
+    std::vector<double *> param_vec;
     std::vector<std::string> param_descri;
 
     std::string descri =
@@ -1222,8 +1307,8 @@ int main(int argc, char** argv) {
   }
 
   {
-    Eigen::aligned_map<double*, Eigen::MatrixXd> jacobs_automatic;
-    Eigen::aligned_map<double*, Eigen::MatrixXd> jacobs_analytic;
+    Eigen::aligned_map<double *, Eigen::MatrixXd> jacobs_automatic;
+    Eigen::aligned_map<double *, Eigen::MatrixXd> jacobs_analytic;
 
     factor_test.TestLocalVelocityFactorAutoDiff(jacobs_automatic);
     factor_test.TestLocalVelocityFactorAnalytic(jacobs_analytic);
@@ -1231,9 +1316,10 @@ int main(int argc, char** argv) {
                               jacobs_analytic);
   }
 
-  for (int i = 0; i < 2; ++i) {
-    Eigen::aligned_map<double*, Eigen::MatrixXd> jacobs_automatic;
-    Eigen::aligned_map<double*, Eigen::MatrixXd> jacobs_analytic;
+  for (int i = 0; i < 2; ++i)
+  {
+    Eigen::aligned_map<double *, Eigen::MatrixXd> jacobs_automatic;
+    Eigen::aligned_map<double *, Eigen::MatrixXd> jacobs_analytic;
 
     std::string descri =
         "image feature factor [case " + std::to_string(i) + "]";
@@ -1264,8 +1350,8 @@ int main(int argc, char** argv) {
   }
 
   {
-    Eigen::aligned_map<double*, Eigen::MatrixXd> jacobs_automatic;
-    Eigen::aligned_map<double*, Eigen::MatrixXd> jacobs_analytic;
+    Eigen::aligned_map<double *, Eigen::MatrixXd> jacobs_automatic;
+    Eigen::aligned_map<double *, Eigen::MatrixXd> jacobs_analytic;
 
     factor_test.TestEpipolarFactorAutoDiff(jacobs_automatic);
     factor_test.TestEpipolarFactorAnalytic(jacobs_analytic);
@@ -1273,18 +1359,22 @@ int main(int argc, char** argv) {
                               jacobs_analytic);
   }
 
-  for (int i = 0; i < 2; ++i) {
-    Eigen::aligned_map<double*, Eigen::MatrixXd> jacobs_automatic;
-    Eigen::aligned_map<double*, Eigen::MatrixXd> jacobs_analytic;
+  for (int i = 0; i < 2; ++i)
+  {
+    Eigen::aligned_map<double *, Eigen::MatrixXd> jacobs_automatic;
+    Eigen::aligned_map<double *, Eigen::MatrixXd> jacobs_analytic;
 
     std::string descri;
-    if (0 == i) {
+    if (0 == i)
+    {
       factor_test.pc_corr_.t_point = 0.55;
       factor_test.pc_corr_.t_map = 0;
 
       descri = "[Plane]";
       factor_test.pc_corr_.geo_type = Plane;
-    } else {
+    }
+    else
+    {
       descri = "[Line]";
       factor_test.pc_corr_.geo_type = Line;
     }
@@ -1293,7 +1383,8 @@ int main(int argc, char** argv) {
     factor_test.CheckJacobian("LoamFeatureFactor " + descri, jacobs_automatic,
                               jacobs_analytic);
 
-    if (1 == i) {
+    if (1 == i)
+    {
       factor_test.pc_corr_.t_point = 0.55;
       factor_test.pc_corr_.t_map = 0.33;
     }
@@ -1305,15 +1396,19 @@ int main(int argc, char** argv) {
                               jacobs_automatic, jacobs_analytic);
   }
 
-  for (int i = 0; i < 2; ++i) {
-    Eigen::aligned_map<double*, Eigen::MatrixXd> jacobs_automatic;
-    Eigen::aligned_map<double*, Eigen::MatrixXd> jacobs_analytic;
+  for (int i = 0; i < 2; ++i)
+  {
+    Eigen::aligned_map<double *, Eigen::MatrixXd> jacobs_automatic;
+    Eigen::aligned_map<double *, Eigen::MatrixXd> jacobs_analytic;
 
     std::string descri;
-    if (0 == i) {
+    if (0 == i)
+    {
       descri = "LoamFeatureOptMapPoseFactor [Plane]";
       factor_test.pc_corr_.geo_type = Plane;
-    } else {
+    }
+    else
+    {
       descri = "LoamFeatureOptMapPoseFactor [Line]";
       factor_test.pc_corr_.geo_type = Line;
     }
@@ -1323,8 +1418,8 @@ int main(int argc, char** argv) {
   }
 
   {
-    Eigen::aligned_map<double*, Eigen::MatrixXd> jacobs_automatic;
-    Eigen::aligned_map<double*, Eigen::MatrixXd> jacobs_analytic;
+    Eigen::aligned_map<double *, Eigen::MatrixXd> jacobs_automatic;
+    Eigen::aligned_map<double *, Eigen::MatrixXd> jacobs_analytic;
 
     factor_test.TestIMUPoseFactorAutoDiff(jacobs_automatic);
     factor_test.TestIMUPoseFactorAnalytic(jacobs_analytic);
@@ -1333,13 +1428,25 @@ int main(int argc, char** argv) {
   }
 
   {
-    Eigen::aligned_map<double*, Eigen::MatrixXd> jacobs_automatic;
-    Eigen::aligned_map<double*, Eigen::MatrixXd> jacobs_analytic;
+    Eigen::aligned_map<double *, Eigen::MatrixXd> jacobs_automatic;
+    Eigen::aligned_map<double *, Eigen::MatrixXd> jacobs_analytic;
 
     factor_test.TestIMUFactorAutoDiff(jacobs_automatic);
     factor_test.TestIMUFactorAnalytic(jacobs_analytic);
     factor_test.CheckJacobian("IMU Data factor", jacobs_automatic,
                               jacobs_analytic);
+
+    printf("Autodiff\n");
+    for(auto &J : jacobs_automatic)
+      std::cout << J.second << std::endl << std::endl;
+    
+    std::cout << std::endl << std::endl;
+    
+    printf("Analytic\n");
+    for(auto &J : jacobs_analytic)
+      std::cout << J.second << std::endl << std::endl;
+    
+    std::cout << std::endl << std::endl;
   }
 
   return 0;

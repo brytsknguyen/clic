@@ -1002,7 +1002,7 @@ ceres::Solver::Summary TrajectoryEstimator::Solve(int max_iterations,
   options.minimizer_progress_to_stdout = progress;
 
   if (num_threads < 1) {
-    num_threads = 1;  // std::thread::hardware_concurrency(); // mine is 8
+    num_threads = std::thread::hardware_concurrency(); // mine is 8
   }
   options.num_threads = num_threads;
   options.max_num_iterations = max_iterations;

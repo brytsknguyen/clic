@@ -24,6 +24,7 @@
 #include <ros/ros.h>
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/PointCloud2.h>
+#include <nav_msgs/Odometry.h>
 #include <tf/transform_broadcaster.h>
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
@@ -51,6 +52,9 @@ enum SplineViewerType {
 
 class OdometryViewer {
  private:
+  
+  ros::Publisher pub_odom_;
+
   // PublishViconData
   ros::Publisher pub_trajectory_raw_;
   ros::Publisher pub_trajectory_est_;
@@ -101,6 +105,9 @@ class OdometryViewer {
 
  public:
   void SetPublisher(ros::NodeHandle &nh) {
+    
+    pub_odom_ = nh.advertise<nav_msgs::Odometry>("/odometry", 1);
+
     /// Vicon data
     pub_trajectory_raw_ = nh.advertise<clic::pose_array>("/path_raw", 10);
     pub_trajectory_est_ = nh.advertise<clic::pose_array>("/path_est", 10);
@@ -168,6 +175,7 @@ class OdometryViewer {
 
   void PublishTF(Eigen::Quaterniond quat, Eigen::Vector3d pos,
                  std::string from_frame, std::string to_frame) {
+    
     static tf::TransformBroadcaster tbr;
     tf::Transform transform;
     transform.setOrigin(tf::Vector3(pos[0], pos[1], pos[2]));
@@ -175,6 +183,25 @@ class OdometryViewer {
     transform.setRotation(tf_q);
     tbr.sendTransform(tf::StampedTransform(transform, ros::Time::now(),
                                            to_frame, from_frame));
+    
+    if (from_frame == "lidar")
+    {
+      nav_msgs::Odometry msg;
+      msg.header.stamp    = ros::Time::now();
+      msg.header.frame_id = to_frame;
+      msg.child_frame_id  = from_frame;
+      
+      msg.pose.pose.position.x = pos(0);
+      msg.pose.pose.position.y = pos(1);
+      msg.pose.pose.position.z = pos(2);
+
+      msg.pose.pose.orientation.x = quat.x();
+      msg.pose.pose.orientation.y = quat.y();
+      msg.pose.pose.orientation.z = quat.z();
+      msg.pose.pose.orientation.w = quat.w();
+
+      pub_odom_.publish(msg);
+    }
   }
 
   void PublishIMUData(Trajectory::Ptr trajectory,

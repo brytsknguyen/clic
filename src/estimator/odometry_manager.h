@@ -51,8 +51,8 @@ class OdometryManager {
   double t_update_map, t_update_traj, t_update_prior;
 
  protected:
-  bool CreateCacheFolder(const std::string& config_path,
-                         const std::string& bag_path);
+  // bool CreateCacheFolder(const std::string& config_path,
+  //                        const std::string& bag_path);
 
   void ProcessLICData();
 

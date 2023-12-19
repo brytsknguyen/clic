@@ -90,7 +90,7 @@ OdometryManager::OdometryManager(const YAML::Node& node, ros::NodeHandle& nh)
   nh.param<bool>("verbose", verbose, false);
   trajectory_manager_->verbose = verbose;
 
-  CreateCacheFolder(config_path, msg_manager_->bag_path_);
+  // CreateCacheFolder(config_path, msg_manager_->bag_path_);
 
   sys_t_offset_vec_.reserve(10000);
 
@@ -113,20 +113,20 @@ OdometryManager::OdometryManager(const YAML::Node& node, ros::NodeHandle& nh)
             << trajectory_->GetSensorEP(LiDARSensor).t_offset_ns << " [ns]";
 }
 
-bool OdometryManager::CreateCacheFolder(const std::string& config_path,
-                                        const std::string& bag_path) {
-  boost::filesystem::path path_cfg(config_path);
-  boost::filesystem::path path_bag(bag_path);
-  if (path_bag.extension() != ".bag") {
-    return false;
-  }
-  std::string bag_name_ = path_bag.stem().string();
+// bool OdometryManager::CreateCacheFolder(const std::string& config_path,
+//                                         const std::string& bag_path) {
+//   boost::filesystem::path path_cfg(config_path);
+//   boost::filesystem::path path_bag(bag_path);
+//   if (path_bag.extension() != ".bag") {
+//     return false;
+//   }
+//   std::string bag_name_ = path_bag.stem().string();
 
-  std::string cache_path_parent_ = path_cfg.parent_path().string();
-  cache_path_ = cache_path_parent_ + "/data/" + bag_name_;
-  boost::filesystem::create_directory(cache_path_parent_ + "/data/");
-  return true;
-}
+//   std::string cache_path_parent_ = path_cfg.parent_path().string();
+//   cache_path_ = cache_path_parent_ + "/data/" + bag_name_;
+//   boost::filesystem::create_directory(cache_path_parent_ + "/data/");
+//   return true;
+// }
 
 void OdometryManager::RunInSubscribeMode() {
   ros::Rate rate(400);

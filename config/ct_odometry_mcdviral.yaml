@@ -1,15 +1,15 @@
 ## Mode
 ## 1 : Odometry_Offline   |  2 : Odometry_Online
-mode: 1
+mode: 2
 
-config_path: /home/tmn/dev_ws/src/clic/config
+config_path: /home/tmn/ros_ws/dev_ws/src/clic/config
 
-imu_yaml: /ntu/imu_ntu.yaml
-camera_yaml: /ntu/cam_ntu.yaml
-lidar_odom_yaml: /ntu/lidar_ntu.yaml
+imu_yaml: /mcdviral/imu_mcdviral.yaml
+camera_yaml: /mcdviral/cam_mcdviral.yaml
+lidar_odom_yaml: /mcdviral/lidar_mcdviral_livox.yaml
 
 ## Bag Param
-bag_path: /media/ha/Dataset/NTU_VIRAL_DATASET/eee_01.bag
+bag_path: /media/tmn/mySataSSD21/DATASETS/MCDVIRAL/PublishedSequencesUnzipped/ntu_day_01/merged/ntu_day_01.bag
 
 bag_start: 0.
 bag_durr: -1
