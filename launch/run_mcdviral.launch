@@ -4,7 +4,7 @@
 
   <arg name="publish_clock"     default = "--clock" />
   <arg name="dataset_cfg"       default = "/config/ct_odometry_mcdviral.yaml" />
-  <arg name="bag_path"          default = "/media/tmn/mySataSSD1/DATASETS/MCDVIRAL/PublishedSequencesUnzipped/ntu_day_10/*.bag" />  
+  <arg name="bag_path"          default = "/media/tmn/mySataSSD1/DATASETS/MCDVIRAL/PublishedSequencesUnzipped/ntu_day_01/*.bag" />  
   <arg name="pasue_time"        default = "-1" />
   <arg name="verbose"           default = "false" />  
 

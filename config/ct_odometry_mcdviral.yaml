@@ -17,8 +17,8 @@ bag_durr: -1
 opt_time_offset: false
 
 ## Spline Param
-knot_distance: 0.03
-update_every_k_knot: 4
+knot_distance: 0.025
+update_every_k_knot: 8
 
 # LIO = 0, LICO = 1
 odometry_mode: 0

@@ -33,9 +33,9 @@ Livox:
     smallp_ratio: 1.2
     point_filter_num: 1
 
-    edge_threshold: 1.0
-    surf_threshold: 0.5
-    odometry_surface_leaf_size: 0.2           # default: 0.4 - outdoor, 0.2 - indoor
+    edge_threshold: 0.7
+    surf_threshold: 0.4
+    odometry_surface_leaf_size: 0.1           # default: 0.4 - outdoor, 0.2 - indoor
     min_distance: 1.0
     max_distance: 100.0
 
@@ -43,8 +43,8 @@ Livox:
 use_corner_feature: true
 
 current_scan_param:
-    corner_leaf_size: 0.1                 # default: 0.2 - outdoor, 0.2 - indoor   !0.2
-    surface_leaf_size: 0.1                # default: 0.4 - outdoor, 0.4 - indoor   !0.4
+    corner_leaf_size: 0.05                # default: 0.2 - outdoor, 0.2 - indoor   !0.2
+    surface_leaf_size: 0.05               # default: 0.4 - outdoor, 0.4 - indoor   !0.4
 
     edge_min_valid_num: 10
     surf_min_valid_num: 10
