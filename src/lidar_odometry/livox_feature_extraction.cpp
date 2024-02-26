@@ -87,7 +87,7 @@ bool LivoxFeatureExtraction::ParsePointCloud(
 
   for (uint i = 1; i < plsize; i++) {
     if ((lidar_msg->points[i].line < n_scan) &&
-        ((lidar_msg->points[i].tag & 0x30) == 0x10) &&
+        ((lidar_msg->points[i].tag & 0x30) == 0x10 || (lidar_msg->points[i].tag & 0x30) == 0x00) &&
         (!IS_VALID(lidar_msg->points[i].x)) &&
         (!IS_VALID(lidar_msg->points[i].y)) &&
         (!IS_VALID(lidar_msg->points[i].z))) {

@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <arg name="autorun"           default = "false" />
+  <arg name="publish_clock"     default = "--clock" />
+  <arg name="pasue_time"        default = "-1" />
+  <arg name="verbose"           default = "false" />
+
+  <arg name="bag_file"          default = "/media/tmn/mySataSSD1/DATASETS/Helmet/helmet_01/*.bag" />
+  
+  <arg name="dataset_cfg" value="/config/ct_odometry_helmet.yaml"/>
+  
+  <!-- <node pkg="clic" type="odometry_node" name="$(anon odometry_node)" output="screen" clear_params="true" 
+        launch-prefix="gdb -ex run &#45;&#45;args"> -->
+  <node required="true" pkg="clic" type="odometry_node" name="odometry_node" output="screen">
+    <param name="dataset_cfg"     type="string" value="$(find clic)$(arg dataset_cfg)" />
+    
+    <param name="bag_path"        type="string" value="$(arg bag_file)" />
+    <param name="pasue_time"      type="double" value="$(arg pasue_time)" />
+    <param name="verbose"         type="bool"   value="$(arg verbose)" />
+  </node>
+
+  <!-- Image conversion -->
+  <!-- <node pkg="image_transport" type="republish" name="clic_republish"
+       args="compressed in:=/camera/image_raw raw out:=/camera/image_raw" output="screen" respawn="true"/> -->
+
+  <!-- start plotjuggler (-\-layout)-->
+  <!-- <node pkg="plotjuggler" type="plotjuggler" name="my_plot_Juggler" args= "-layout $(find clic)/config/rviz/plotjuggler_bias.xml" /> -->
+
+  <!-- <param name="/use_sim_time" value="true" /> -->
+
+  <!-- Play the bag file -->
+  <!-- <node pkg="rosbag" type="play" name="play1" output="log" required="true" args="$(arg publish_clock) $(arg bag_path) -r 1.0 -s 0.0" /> -->
+  <node required="$(arg autorun)" pkg="rosbag" type="play" name="rosbag_player"
+        args="$(arg publish_clock) $(arg bag_file) -r 1.0 -s 0.0"
+        launch-prefix="bash -c 'sleep 1.0; $0 $@' "/>
+
+  <!-- Visualize -->
+  <node pkg="rviz" type="rviz" name="rviz_odom" output="log" required = "true" args="-d $(find clic)/launch/clic.rviz" />
+
+</launch>
