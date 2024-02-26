@@ -344,11 +344,9 @@ void OdometryManager::ProcessLiDARData() {
   trajectory_manager_->Log("[LIO]");
 
   auto pose = trajectory_->GetLidarPose(msg.lidar_timestamp);
-  odom_viewer_.PublishTF(pose.unit_quaternion(), pose.translation(), "lidar",
-                         "map");
-
-  odom_viewer_.PublishTF(trajectory_manager_->GetGlobalFrame(),
-                         Eigen::Vector3d::Zero(), "map", "global");
+  double start_time = trajectory_->GetDataStartTime();
+  odom_viewer_.PublishTF(pose.unit_quaternion(), pose.translation(), "lidar", "map", start_time + msg.lidar_timestamp);
+  odom_viewer_.PublishTF(trajectory_manager_->GetGlobalFrame(), Eigen::Vector3d::Zero(), "map", "global", start_time + msg.lidar_timestamp);
 }
 
 void OdometryManager::ProcessImageData() {

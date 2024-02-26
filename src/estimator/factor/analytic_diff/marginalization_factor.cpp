@@ -262,6 +262,8 @@ bool MarginalizationInfo::marginalize() {
 
   linearized_jacobians = S_sqrt.asDiagonal() * saes2.eigenvectors().transpose();
   linearized_residuals = S_inv_sqrt.asDiagonal() * saes2.eigenvectors().transpose() * b;
+
+  // printf("Marg Cost: %f\n", linearized_residuals.dot(linearized_residuals));
   
   time[4] = timer.toc();
   LOG(INFO) << "marginalize costs " 

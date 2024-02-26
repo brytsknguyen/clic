@@ -1,33 +1,24 @@
 # horizontal
 lidar0:
-    topic: /os1_cloud_node1/points
+    topic: /os_cloud_node/points
     is_livox: false
     Extrinsics:
         # Nguyen, et al. "Ntu viral: A visual-inertial-ranging-lidar dataset, from an aerial vehicle viewpoint."
         # Section4.2 " the timestamp of each lidar point cloud message matches with the end-time of the scan"
-        time_offset: -0.1
+        time_offset: -0.100
         # LiDAR in IMU
-        Trans: [-0.050, 0.0, 0.055]
-        Rot: [1, 0, 0,
-              0, 1, 0,
-              0, 0, 1]
-# # vertical
-# lidar1:
-#     topic: /os1_cloud_node2/points
-#     is_livox: false
-#     Extrinsics:
-#         time_offset: -0.100
-#         # LiDAR2 in imu
-#         Trans: [-0.550, 0.030, 0.050]
-#         Rot: [-1.0, 0.0, 0.0,
-#               0.0, 0.0, 1.0,
-#               0.0, 1.0, 0.0]
+        Trans: [-0.04894521120476690,
+                -0.03126929060277820,
+                -0.01755515794190739]
+        Rot:   [ 0.999913504074182800, -0.01116636551106650, -0.0069495792219705765,
+                -0.011356389542500523, -0.99954530068657550, -0.0279324952688129200,
+                -0.006634514801262056,  0.02800900135057546, -0.9995856536869142000]
 num_lidars: 1
 
 
 ################### FeatureExtraction ###################
 VLP16:
-    N_SCAN: 16
+    N_SCAN: 128
     Horizon_SCAN: 1024
     edge_threshold: 1.0
     surf_threshold: 0.1

@@ -4,12 +4,12 @@ lidar0:
     Extrinsics:
         time_offset: 0.000
         # LiDAR in IMU /livox/imu    
-        Trans: [-0.010514839241742317,
-                -0.008989784841758377,
-                 0.037356468638334630]
-        Rot:   [ 0.99985813160508060000, -0.0002258196228773494, -0.0168423771687589430,
-                -0.00017111407692153792, -0.9999947058517530000,  0.0032494597148797887,
-                -0.01684302179448474500, -0.0032461167514232880, -0.9998528768488223000]
+        Trans: [ 0.020,
+                 0.000,
+                 0.037]
+        Rot:   [1.0,  0.0,  0.0,
+                0.0, -1.0,  0.0,
+                0.0,  0.0, -1.0]
 num_lidars: 1
 
 
@@ -18,7 +18,7 @@ Livox:
     n_scan: 1
     blind: 0.1        #0.5 Livox Avia cannot precisely detect objects which are less than 1m away.
     inf_bound: 4     #10  Livox Avia can precisely detect objects 450m away.
-    group_size: 8
+    group_size: 2
     disA: 0.01
     disB: 0.1
     limit_maxmid: 6.25
@@ -33,8 +33,8 @@ Livox:
     smallp_ratio: 1.2
     point_filter_num: 1
 
-    edge_threshold: 0.7
-    surf_threshold: 0.4
+    edge_threshold: 0.9
+    surf_threshold: 0.8
     odometry_surface_leaf_size: 0.1           # default: 0.4 - outdoor, 0.2 - indoor
     min_distance: 1.0
     max_distance: 100.0

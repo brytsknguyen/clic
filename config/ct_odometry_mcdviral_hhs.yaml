@@ -4,9 +4,9 @@ mode: 2
 
 config_path: /home/tmn/ros_ws/dev_ws/src/clic/config
 
-imu_yaml: /mcdviral/imu_mcdviral.yaml
-camera_yaml: /mcdviral/cam_mcdviral.yaml
-lidar_odom_yaml: /mcdviral/lidar_mcdviral_livox.yaml
+imu_yaml: /mcdviral_hhs/imu_mcdviral.yaml
+camera_yaml: /mcdviral_hhs/cam_mcdviral.yaml
+lidar_odom_yaml: /mcdviral_hhs/lidar_mcdviral_livox.yaml
 
 ## Bag Param
 bag_path: /media/tmn/mySataSSD21/DATASETS/MCDVIRAL/PublishedSequencesUnzipped/ntu_day_01/merged/ntu_day_01.bag
@@ -25,8 +25,8 @@ odometry_mode: 0
 
 ## For Optimization https://www.vectornav.com/products/detail/vn-100
 imu_frequency: 385
-gyroscope_noise_density: 6.1e-5                 # [0.0035  deg/s/sqrt(Hz)] -> 6.108e-4
-gyroscope_random_walk: 3.4e-6                   # [7       deg/h]          -> 3.393e-5
+gyroscope_noise_density: 6.1e-4                 # [0.0035  deg/s/sqrt(Hz)] -> 6.108e-4
+gyroscope_random_walk: 3.4e-5                   # [7       deg/h]          -> 3.393e-5
 accelerometer_noise_density: 1.4e-3             # [140     ug/sqrt(Hz)]    -> 1.372e-3
 accelerometer_random_walk: 3.9e-4               # [40      ug]             -> 3.920e-4
 
@@ -42,4 +42,4 @@ CameraExtrinsics:
     Trans: [0.00552943, -0.12431302, 0.01614686]
     Rot: [ 0.02183084, -0.01312053,  0.99967558,
            0.99975965,  0.00230088, -0.02180248,
-           -0.00201407,  0.99991127,  0.01316761]
+          -0.00201407,  0.99991127,  0.01316761]

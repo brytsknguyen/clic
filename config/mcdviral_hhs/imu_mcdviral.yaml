@@ -1,4 +1,4 @@
-imu_topic: /vn100/imu #/os1_cloud_node1/imu
+imu_topic: /vn200/imu
 
 ## ImuStateEstimator
 imu_excite_threshold: 0.5

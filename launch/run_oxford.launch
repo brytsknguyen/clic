@@ -6,8 +6,14 @@
     <arg name="pasue_time"        default = "-1" />
     <arg name="verbose"           default = "false" />
 
-    <arg name="dataset_cfg"     default="/config/ct_odometry_ntu.yaml" />
-    <arg name="bag_path"        default="/media/tmn/mySataSSD21/DATASETS/NTU_VIRAL/DATA/spms_01/spms_01_mod.bag" />
+    <arg name="dataset_cfg"     default="/config/ct_odometry_ncd.yaml" />
+
+    <!-- <arg  name="bag_path" default="/media/tmn/mySataSSD1/DATASETS/NewerCollegeDataset/01_short_experiment/01_short_experiment.bag"/> -->
+    <!-- <arg  name="bag_path" default="/media/tmn/mySataSSD1/DATASETS/NewerCollegeDataset/01_short_experiment/01_short_experiment.bag"/> -->
+    <arg  name="bag_path" default="/media/tmn/mySataSSD1/DATASETS/NewerCollegeDataset/05_quad_with_dynamics/05_quad_with_dynamics.bag"/>
+    <!-- <arg  name="bag_path" default="/media/tmn/mySataSSD1/DATASETS/NewerCollegeDataset/06_dynamic_spinning/06_dynamic_spinning.bag"/> -->
+    <!-- <arg  name="bag_path" default="/media/tmn/mySataSSD1/DATASETS/NewerCollegeDataset/07_parkland_mound/07_parkland_mound.bag"/> -->
+
 
     <node pkg="clic" type="odometry_node" name="$(anon odometry_node)" output="screen" required="true">
         <param name="dataset_cfg" type="string" value="$(find clic)$(arg dataset_cfg)" />
@@ -20,9 +26,8 @@
 
     <!-- Rosbag play -->
     <node required="$(arg autorun)" pkg="rosbag" type="play" name="rosbag_player"
-          args="$(arg publish_clock) $(arg bag_file) -r 1.0 -s 0.0"
+          args="$(arg publish_clock) $(arg bag_path) -r 1.0 -s 0.0"
           launch-prefix="bash -c 'sleep 1.0; $0 $@' "/>
-
 
     <!-- Rviz -->
     <node pkg="rviz" type="rviz" name="rviz_odom" output="log" required="true"

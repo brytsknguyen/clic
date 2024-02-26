@@ -174,20 +174,21 @@ class OdometryViewer {
   }
 
   void PublishTF(Eigen::Quaterniond quat, Eigen::Vector3d pos,
-                 std::string from_frame, std::string to_frame) {
+                 std::string from_frame, std::string to_frame,
+                 double stamp) {
     
     static tf::TransformBroadcaster tbr;
     tf::Transform transform;
     transform.setOrigin(tf::Vector3(pos[0], pos[1], pos[2]));
     tf::Quaternion tf_q(quat.x(), quat.y(), quat.z(), quat.w());
     transform.setRotation(tf_q);
-    tbr.sendTransform(tf::StampedTransform(transform, ros::Time::now(),
+    tbr.sendTransform(tf::StampedTransform(transform, ros::Time(stamp),
                                            to_frame, from_frame));
     
     if (from_frame == "lidar")
     {
       nav_msgs::Odometry msg;
-      msg.header.stamp    = ros::Time::now();
+      msg.header.stamp    = ros::Time(stamp);
       msg.header.frame_id = to_frame;
       msg.child_frame_id  = from_frame;
       

@@ -2,14 +2,14 @@
 ## 1 : Odometry_Offline   |  2 : Odometry_Online
 mode: 1
 
-config_path: /home/ha/ros_ws/catkin_clic/src/clic/config
+config_path: /home/tmn/ros_ws/dev_ws/src/clic/config
 
 imu_yaml: /ncd/imu_ncd.yaml
 camera_yaml: /ncd/cam_ncd.yaml
 lidar_odom_yaml: /ncd/lidar_ncd.yaml
 
 ## Bag Param
-bag_path: /media/ha/Dataset/ncd/06_dynamic_spinning/06_0.bag
+bag_path: /media/tmn/mySataSSD1/DATASETS/NewerCollegeDataset/05_quad_with_dynamics/05_quad_with_dynamics.bag
 
 bag_start: 0.0
 bag_durr: -1
