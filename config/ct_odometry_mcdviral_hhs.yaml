@@ -9,7 +9,7 @@ camera_yaml: /mcdviral_hhs/cam_mcdviral.yaml
 lidar_odom_yaml: /mcdviral_hhs/lidar_mcdviral_livox.yaml
 
 ## Bag Param
-bag_path: /media/tmn/mySataSSD21/DATASETS/MCDVIRAL/PublishedSequencesUnzipped/ntu_day_01/merged/ntu_day_01.bag
+bag_path: not_neccessary.bag
 
 bag_start: 0.
 bag_durr: -1
