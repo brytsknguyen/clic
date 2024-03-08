@@ -7,19 +7,21 @@
   <arg name="pasue_time"        default = "-1" />
   <arg name="verbose"           default = "false" />
 
-  <!-- <arg name="bag_file"          default = "/media/tmn/mySataSSD1/DATASETS/MCDVIRAL/PublishedSequencesUnzipped/ntu_day_01/*.bag" /> -->
-  <arg name="bag_file"          default = "/media/tmn/mySataSSD1/DATASETS/MCDVIRAL/PublishedSequencesUnzipped/tuhh_day_04/*.bag" />
-  <!-- <arg name="bag_file"          default = "/media/tmn/mySataSSD1/DATASETS/MCDVIRAL/PublishedSequencesUnzipped/ntu_day_01/*.bag" /> -->
+  <!-- Path to MCD dataset -->
+  <arg name="data_path" value="/media/tmn/mySataSSD1/DATASETS/MCDVIRAL/PublishedSequencesUnzipped"/>
+
+  <arg name="bag_file" default = "$(arg data_path)/ntu_day_01/*.bag" />
+  <!-- <arg name="bag_file" default = "$(arg data_path)/kth_day_06/*.bag" /> -->
+  <!-- <arg name="bag_file" default = "$(arg data_path)/tuhh_day_04/*.bag" /> -->
   
   <arg name="dataset_cfg" value="/config/ct_odometry_mcdviral_atv.yaml" if="$(eval 'ntu_'  in bag_file)" />
   <arg name="dataset_cfg" value="/config/ct_odometry_mcdviral_hhs.yaml" if="$(eval 'kth_'  in bag_file)" />
   <arg name="dataset_cfg" value="/config/ct_odometry_mcdviral_hhs.yaml" if="$(eval 'tuhh_' in bag_file)" />
 
-  <!-- <node pkg="clic" type="odometry_node" name="$(anon odometry_node)" output="screen" clear_params="true" 
-        launch-prefix="gdb -ex run &#45;&#45;args"> -->
-  <node required="true" pkg="clic" type="odometry_node" name="odometry_node" output="screen">
+  <!-- Modify the path to sensor config -->
+  <node required="false" pkg="clic" type="odometry_node" name="odometry_node" output="screen">
     <param name="dataset_cfg"     type="string" value="$(find clic)$(arg dataset_cfg)" />
-    
+    <param name="config_path"     type="string" value="$(find clic)/config" />
     <param name="bag_path"        type="string" value="$(arg bag_file)" />
     <param name="pasue_time"      type="double" value="$(arg pasue_time)" />
     <param name="verbose"         type="bool"   value="$(arg verbose)" />
