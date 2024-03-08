@@ -8,19 +8,27 @@
   <arg name="verbose"           default = "false" />
 
   <!-- Path to MCD dataset -->
-  <arg name="data_path" value="/media/tmn/mySataSSD1/DATASETS/MCDVIRAL/PublishedSequencesUnzipped"/>
+  <arg name="data_path" value="/media/tmn/mySataSSD1/DATASETS/MCDVIRAL/PublishedSequences"/>
 
   <arg name="bag_file" default = "$(arg data_path)/ntu_day_01/*.bag" />
   <!-- <arg name="bag_file" default = "$(arg data_path)/kth_day_06/*.bag" /> -->
   <!-- <arg name="bag_file" default = "$(arg data_path)/tuhh_day_04/*.bag" /> -->
   
-  <arg name="dataset_cfg" value="/config/ct_odometry_mcdviral_atv.yaml" if="$(eval 'ntu_'  in bag_file)" />
-  <arg name="dataset_cfg" value="/config/ct_odometry_mcdviral_hhs.yaml" if="$(eval 'kth_'  in bag_file)" />
-  <arg name="dataset_cfg" value="/config/ct_odometry_mcdviral_hhs.yaml" if="$(eval 'tuhh_' in bag_file)" />
+  <arg name="dataset_cfg" value="atv" if="$(eval 'ntu_'  in bag_file)" />
+  <arg name="dataset_cfg" value="hhs" if="$(eval 'kth_'  in bag_file)" />
+  <arg name="dataset_cfg" value="hhs" if="$(eval 'tuhh_' in bag_file)" />
+  
+  <!-- Run the livox to ouster converter -->
+  <!-- <node pkg="slict" type="slict_livox_to_ouster" name="slict_livox_to_ouster" respawn="false" output="log" required="true"></node>   -->
+
+  <!-- Create the merge pointcloud -->
+  <!-- <node pkg="slict" type="slict_merge_lidar" name="slict_merge_lidar" respawn="true" output="screen" required="false">
+    <rosparam file="$(find slict)/config/mcdviral_$(arg dataset_cfg).yaml" command="load"/>
+  </node> -->
 
   <!-- Modify the path to sensor config -->
   <node required="false" pkg="clic" type="odometry_node" name="odometry_node" output="screen">
-    <param name="dataset_cfg"     type="string" value="$(find clic)$(arg dataset_cfg)" />
+    <param name="dataset_cfg"     type="string" value="$(find clic)/config/ct_odometry_mcdviral_$(arg dataset_cfg).yaml" />
     <param name="config_path"     type="string" value="$(find clic)/config" />
     <param name="bag_path"        type="string" value="$(arg bag_file)" />
     <param name="pasue_time"      type="double" value="$(arg pasue_time)" />

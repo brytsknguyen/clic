@@ -2,11 +2,15 @@
 ## 1 : Odometry_Offline   |  2 : Odometry_Online
 mode: 2
 
+# You need to manual set this path, no choice...
 config_path: /home/tmn/ros_ws/dev_ws/src/clic/config
 
 imu_yaml: /mcdviral_atv/imu_mcdviral.yaml
 camera_yaml: /mcdviral_atv/cam_mcdviral.yaml
+# Uncomment either below to change to merged lidar mode or single mode
+# lidar_odom_yaml: /mcdviral_atv/lidar_mcdviral.yaml
 lidar_odom_yaml: /mcdviral_atv/lidar_mcdviral_livox.yaml
+# lidar_odom_yaml: /mcdviral_atv/lidar_mcdviral_ouster.yaml
 
 ## Bag Param
 bag_path: not_neccessary.bag
